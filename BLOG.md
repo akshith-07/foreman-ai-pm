@@ -16,7 +16,7 @@ This post covers how it works, how we set up Switch, and the problems we hit
 along the way. If you're trying Switch for the first time, the last section
 might save you an hour.
 
-**Repo:** https://github.com/akshith-07/foreman-ai-pm · **Demo:** *(video link)*
+**Repo:** https://github.com/akshith-07/foreman-ai-pm · **Demo:** https://youtu.be/VvE8XpSeYQI
 
 ---
 

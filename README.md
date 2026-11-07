@@ -12,7 +12,7 @@ and assigning work, tracking blockers, balancing workload across projects
 and reporting. **A human approves every assignment.** A live dashboard shows
 the portfolio and each board changing as the team and agents talk.
 
-> Demo video: _<add link>_ · Build story: [BLOG.md](BLOG.md)
+> **Demo video:** https://youtu.be/VvE8XpSeYQI · Build story: [BLOG.md](BLOG.md)
 
 ## The team
 
