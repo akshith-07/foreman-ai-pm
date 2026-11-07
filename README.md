@@ -55,7 +55,7 @@ shared context and no humans involved. Switch provides:
 - **Room instructions.** Every agent that joins the room reads
   [`switch/room-instructions.md`](switch/room-instructions.md).
 - **Your agent of choice.** The agents run on Codex here, but any provider
-  Switch supports works, including Claude Code and OpenCode.
+  Switch supports works, such as OpenCode.
 
 The dashboard is **read-only**. Every change happens in the Switch room.
 
@@ -150,7 +150,7 @@ flowchart LR
 ## Run it yourself (about 20 min)
 
 **You need:** macOS, [Docker](https://www.docker.com/), Python 3.10+, and an
-AI coding agent you're signed in to: Codex, Claude Code or OpenCode.
+AI coding agent you're signed in to: Codex or OpenCode.
 
 1. **Clone the repo, seed the board and start the dashboard.**
    ```bash
