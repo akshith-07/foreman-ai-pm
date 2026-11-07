@@ -84,7 +84,11 @@ The dashboard is **read-only**. Every change happens in the Switch room.
   docker run -d --name foreman-mailpit -p 127.0.0.1:1025:1025 -p 127.0.0.1:8026:8025 axllent/mailpit
   cp .env.example .env    # points Foreman at 127.0.0.1:1025
   ```
-  Then open http://127.0.0.1:8026 to see the inbox. For a real mail server,
+  Then open http://127.0.0.1:8026 to see the inbox.
+  The agents run in a sandbox with **no network access**, so they only
+  queue emails. The dashboard server, which runs outside the sandbox,
+  includes a **mail relay** that delivers queued emails every 3 seconds. Keep
+  `scripts/dashboard.py` running, or run `board.py deliver` by hand. For a real mail server,
   set `FOREMAN_SMTP_HOST`, `FOREMAN_SMTP_PORT`, `FOREMAN_SMTP_USER`,
   `FOREMAN_SMTP_PASSWORD` and `FOREMAN_SMTP_TLS=1` in `.env`, which is
   git-ignored.

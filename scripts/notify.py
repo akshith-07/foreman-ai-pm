@@ -66,17 +66,15 @@ def send(to: list, subject: str, body: str, *, event: str, project: str, task: s
     eml.write_bytes(bytes(msg))
 
     status, error = "queued", None
-    host = env.get("FOREMAN_SMTP_HOST")
-    if host:
+    if env.get("FOREMAN_SMTP_HOST"):
         try:
-            port = int(env.get("FOREMAN_SMTP_PORT", "25"))
-            with smtplib.SMTP(host, port, timeout=8) as s:
-                if env.get("FOREMAN_SMTP_TLS") == "1":
-                    s.starttls(context=ssl.create_default_context())
-                if env.get("FOREMAN_SMTP_USER"):
-                    s.login(env["FOREMAN_SMTP_USER"], env.get("FOREMAN_SMTP_PASSWORD", ""))
-                s.send_message(msg)
+            _smtp_send(env, msg)
             status = "sent"
+        except PermissionError:
+            # Agents run in a sandbox without network access. That's intended:
+            # the email stays queued and the dashboard's mail relay
+            # (deliver_pending, outside the sandbox) sends it within seconds.
+            status = "queued"
         except Exception as e:  # never break a board update because mail failed
             status, error = "failed", f"{type(e).__name__}: {e}"
 
@@ -89,15 +87,69 @@ def send(to: list, subject: str, body: str, *, event: str, project: str, task: s
     return entry
 
 
-def recent(limit: int = 30, project: str | None = None) -> list:
+def _smtp_send(env: dict, msg) -> None:
+    port = int(env.get("FOREMAN_SMTP_PORT", "25"))
+    with smtplib.SMTP(env["FOREMAN_SMTP_HOST"], port, timeout=8) as s:
+        if env.get("FOREMAN_SMTP_TLS") == "1":
+            s.starttls(context=ssl.create_default_context())
+        if env.get("FOREMAN_SMTP_USER"):
+            s.login(env["FOREMAN_SMTP_USER"], env.get("FOREMAN_SMTP_PASSWORD", ""))
+        s.send_message(msg)
+
+
+def _rows() -> list:
+    """Log entries with later status updates folded in (the log is append-only)."""
     if not LOG.exists():
         return []
-    rows = []
+    rows, by_file = [], {}
     for line in LOG.read_text().splitlines():
         try:
-            rows.append(json.loads(line))
+            d = json.loads(line)
         except ValueError:
             continue
+        if "update" in d:  # {"update": <file>, "status": ..., "error": ...}
+            r = by_file.get(d["update"])
+            if r:
+                r["status"] = d["status"]
+                if d["status"] == "failed":
+                    r["tries"] = r.get("tries", 0) + 1
+                r.pop("error", None)
+                if d.get("error"):
+                    r["error"] = d["error"]
+        else:
+            rows.append(d)
+            by_file[d["file"]] = d
+    return rows
+
+
+def deliver_pending(max_tries: int = 5) -> int:
+    """Send queued (or failed) emails. Runs outside the agent sandbox, e.g. in the dashboard."""
+    env = _env()
+    if not env.get("FOREMAN_SMTP_HOST"):
+        return 0
+    from email import policy
+    from email.parser import BytesParser
+    sent = 0
+    for r in _rows():
+        if r["status"] not in ("queued", "failed") or r.get("tries", 0) >= max_tries:
+            continue
+        eml = OUTBOX / r["file"]
+        if not eml.exists():
+            continue
+        try:
+            msg = BytesParser(policy=policy.default).parsebytes(eml.read_bytes())
+            _smtp_send(env, msg)
+            update = {"update": r["file"], "status": "sent"}
+            sent += 1
+        except Exception as e:
+            update = {"update": r["file"], "status": "failed", "error": f"{type(e).__name__}: {e}"}
+        with LOG.open("a") as f:
+            f.write(json.dumps(update) + "\n")
+    return sent
+
+
+def recent(limit: int = 30, project: str | None = None) -> list:
+    rows = _rows()
     if project:
         rows = [r for r in rows if r.get("project") == project]
     return list(reversed(rows))[:limit]

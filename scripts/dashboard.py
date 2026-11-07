@@ -12,6 +12,8 @@ Standard library only.
 import argparse
 import json
 import sys
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -96,6 +98,22 @@ def main():
                      f"open http://127.0.0.1:{a.port}\nTo run another copy, use --port 8790.")
         raise
     print(f"Foreman dashboard: http://127.0.0.1:{a.port}  (Ctrl+C to stop)")
+
+    # Mail relay: agents run in a sandbox with no network, so they only queue
+    # emails in outbox/. This thread (outside the sandbox) delivers them.
+    def relay():
+        while True:
+            try:
+                n = N.deliver_pending()
+                if n:
+                    print(f"✉ relay delivered {n} email(s)")
+            except Exception as e:  # keep the relay alive
+                print(f"mail relay error: {e}")
+            time.sleep(3)
+
+    if N.mode() == "smtp":
+        threading.Thread(target=relay, daemon=True).start()
+        print("Mail relay on: queued emails are sent via SMTP every 3 s")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

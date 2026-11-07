@@ -444,7 +444,8 @@ def _mail(board, to_handles, subject, body, event, task=None, cc_handles=()):
     cc = [email_of(h) for h in cc_handles]
     r = notify.send(to, subject, body, event=event, project=board["key"], task=task, at=stamp(), cc=cc)
     if r.get("status") != "skipped":
-        verb = {"sent": "Emailed", "queued": "Queued email to", "failed": "Email FAILED to"}[r["status"]]
+        verb = {"sent": "Emailed", "failed": "Email FAILED to",
+                "queued": "Emailed (queued, the mail relay delivers it)" if notify.mode() == "smtp" else "Queued email to"}[r["status"]]
         print(f"✉ {verb} {', '.join(r['to'] + r.get('cc', []))}: {subject}"
               + (f" ({r['error']})" if r.get("error") else ""))
 
@@ -600,6 +601,11 @@ def cmd_remind(a):
               f"({board['release']['name']} due {board['release']['due']}):\n\n{lines}\n\n"
               f"{('Note: ' + a.message + chr(10) + chr(10)) if a.message else ''}"
               f"Reply in #project-room to @foreman-tracker with progress or blockers.", "reminder")
+
+
+def cmd_deliver(_a):
+    n = notify.deliver_pending()
+    print(f"Delivered {n} queued email(s)" if notify.mode() == "smtp" else "SMTP isn't configured (no .env); emails stay in outbox/.")
 
 
 def cmd_emails(a):
@@ -876,6 +882,7 @@ def main():
     s = sp("remind")
     s.add_argument("id", nargs="?", help="one task id; default: every open task in the project")
     s.add_argument("--message", default="", help="optional note added to the email")
+    sp("deliver", by=False, project=False)
     s = sp("emails", by=False)
     s.add_argument("--limit", type=int, default=15)
     s = sp("use", by=False, project=False)
