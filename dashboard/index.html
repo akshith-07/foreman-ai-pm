@@ -24,12 +24,12 @@
             <circle class="ring-bg" cx="22" cy="22" r="18"></circle>
             <circle class="ring-fg" id="ring" cx="22" cy="22" r="18"></circle>
           </svg>
-          <div><div class="kpi-val" id="k-progress">0/0</div><div class="kpi-lbl">Tasks done</div></div>
+          <div><div class="kpi-val" id="k-progress">0/0</div><div class="kpi-lbl" id="k-progress-lbl">Tasks done</div></div>
         </div>
         <div class="kpi"><div class="kpi-val" id="k-blocked">0</div><div class="kpi-lbl">Blocked</div></div>
         <div class="kpi"><div class="kpi-val" id="k-overdue">0</div><div class="kpi-lbl">Overdue</div></div>
         <div class="kpi"><div class="kpi-val" id="k-approval">0</div><div class="kpi-lbl">Awaiting approval</div></div>
-        <div class="kpi"><div class="kpi-val" id="k-days">—</div><div class="kpi-lbl">Days to release</div></div>
+        <div class="kpi"><div class="kpi-val" id="k-days">—</div><div class="kpi-lbl" id="k-days-lbl">Days to release</div></div>
       </div>
 
       <div class="top-right">
@@ -43,10 +43,15 @@
       </div>
     </header>
 
+    <nav class="tabs" id="tabs" aria-label="Projects"></nav>
+
     <div class="risk-banner" id="risk-banner" hidden></div>
 
     <main class="layout">
-      <section class="board" id="board" aria-label="Task board"></section>
+      <section class="main-view">
+        <div class="portfolio" id="portfolio" aria-label="All projects" hidden></div>
+        <div class="board" id="board" aria-label="Task board" hidden></div>
+      </section>
 
       <aside class="rail">
         <section class="panel">
@@ -55,7 +60,7 @@
         </section>
 
         <section class="panel">
-          <div class="panel-head"><h2>Team workload</h2><span class="panel-note">open tasks</span></div>
+          <div class="panel-head"><h2>Team workload</h2><span class="panel-note" id="team-note">open tasks</span></div>
           <div id="team" class="team"></div>
         </section>
 

@@ -15,3 +15,7 @@ auth.json
 # Python
 __pycache__/
 *.pyc
+
+# Live demo state (recreated from seed/ by board.py)
+projects/
+reports/*.md

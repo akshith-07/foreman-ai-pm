@@ -5,7 +5,7 @@
   python3 scripts/dashboard.py --port 9000
 
 Serves the front end in dashboard/ (index.html, styles.css, app.js) and a JSON
-snapshot at /api/state. It only reads tasks.json and reports/. All changes
+snapshot at /api/state?project=all|KEY. It only reads projects/ and reports/. All changes
 still happen in the Switch room, where the agents run scripts/board.py.
 Standard library only.
 """
@@ -14,6 +14,7 @@ import json
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import board as B  # noqa: E402
@@ -27,19 +28,26 @@ STATIC = {  # explicit allow-list, so nothing else in the repo is served
 }
 
 
-def state() -> dict:
-    data = B.load()
-    return {
-        "project": data["project"],
-        "release": data["release"],
-        "tasks": data["tasks"],
+def state(selected: str) -> dict:
+    boards = B.load_all()
+    by_key = {b["key"]: b for b in boards}
+    sel = selected.upper() if selected and selected.upper() in by_key else "ALL"
+    out = {
+        "selected": sel,
+        "projects": [B.summary(b) for b in boards],
+        "people": B.people(boards),
         "team": B.TEAM,
-        "load": B.loads(data),
-        "health": B.health(data),
-        "activity": B.activity(data)[:40],
-        "report": B.latest_report(),
         "generated": B.stamp(),
     }
+    if sel == "ALL":
+        out["activity"] = B.activity(boards)[:50]
+        out["report"] = B.latest_report()
+    else:
+        b = by_key[sel]
+        out["project"] = {**B.summary(b), "tasks": b["tasks"], "load": B.loads(b)}
+        out["activity"] = B.activity([b])[:40]
+        out["report"] = B.latest_report(sel) or None
+    return out
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -51,10 +59,12 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        path = self.path.split("?", 1)[0]
+        url = urlparse(self.path)
+        path = url.path
         if path == "/api/state":
             try:
-                self._send(200, json.dumps(state()).encode(), "application/json")
+                sel = parse_qs(url.query).get("project", ["all"])[0]
+                self._send(200, json.dumps(state(sel)).encode(), "application/json")
             except Exception as e:  # board mid-write or invalid: tell the page, don't crash
                 self._send(503, json.dumps({"error": str(e)}).encode(), "application/json")
         elif path in STATIC:

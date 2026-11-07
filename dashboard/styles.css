@@ -164,6 +164,61 @@ h2 { margin: 0; }
 .risk-banner b { color: var(--bad); }
 .risk-banner ul { margin: 0; padding-left: 16px; }
 
+/* ---------- Project tabs ---------- */
+.tabs {
+  display: flex; gap: 6px; padding: 12px 24px 0; overflow-x: auto; scrollbar-width: none;
+}
+.tab {
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  padding: 7px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--text-2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.tab:hover { color: var(--text); border-color: var(--line-strong); }
+.tab.on { color: var(--text); border-color: color-mix(in srgb, var(--pc, var(--accent)) 65%, transparent);
+  background: color-mix(in srgb, var(--pc, var(--accent)) 12%, var(--panel)); }
+.tab .key { font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--pc, var(--accent)); }
+.tab .hdot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.hdot[data-v="On track"] { background: var(--ok); }
+.hdot[data-v="At risk"] { background: var(--warn); }
+.hdot[data-v="Off track"] { background: var(--bad); }
+.tab.enter { animation: enter .5s cubic-bezier(.2,.8,.2,1); }
+
+/* ---------- Portfolio ---------- */
+.main-view { min-width: 0; }
+.portfolio { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+.proj {
+  position: relative; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px;
+  box-shadow: var(--shadow); transition: border-color .2s, box-shadow .2s, transform .2s; overflow: hidden;
+}
+.proj::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--pc); }
+.proj:hover { border-color: color-mix(in srgb, var(--pc) 55%, var(--line)); box-shadow: var(--shadow-lift); transform: translateY(-2px); }
+.proj.enter { animation: enter .6s cubic-bezier(.2,.8,.2,1); }
+.proj.flash { background-color: var(--flash); }
+.proj-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.proj-key { font: 700 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 13%, transparent); padding: 2px 8px; border-radius: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); }
+.pill[data-v="On track"] { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.pill[data-v="At risk"] { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+.pill[data-v="Off track"] { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
+.proj-name { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.proj-desc { color: var(--muted); font-size: 12.5px; margin: 2px 0 12px; min-height: 18px; }
+.proj-rel { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-2); margin-bottom: 6px; }
+.proj-rel b { color: var(--text); }
+.pbar { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: var(--panel-2); border: 1px solid var(--line); }
+.pbar i { display: block; height: 100%; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.proj-counts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cnt { font-size: 11.5px; color: var(--text-2); display: inline-flex; align-items: center; gap: 5px; }
+.cnt i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; }
+.proj-risk { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--text-2); }
+.proj-risk.bad { color: var(--bad); }
+.proj-team { display: flex; margin-top: 12px; }
+.proj-team .av { margin-right: -6px; box-shadow: 0 0 0 2px var(--panel); }
+.over { font-size: 10.5px; font-weight: 700; color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); padding: 1px 6px; border-radius: 5px; margin-left: 6px; }
+.ptag { font: 700 10.5px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--pc); margin-right: 4px; }
+
 /* ---------- Layout ---------- */
 .layout {
   flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px;
@@ -332,6 +387,7 @@ h2 { margin: 0; }
   .agents { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 640px) {
+  .tabs { padding: 10px 16px 0; }
   .topbar { padding: 12px 16px; gap: 12px; }
   .layout { padding: 12px 16px; }
   .risk-banner { margin: 12px 16px 0; }

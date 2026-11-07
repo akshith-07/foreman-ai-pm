@@ -1,7 +1,10 @@
-# Team — Invoicely (fictional demo team)
+# Team (fictional demo team)
 
-The PM agent reads this file to decide who should own a task.
-`Load` = number of open tasks (todo + in_progress + blocked) the person owns today; the PM recalculates it from `tasks.json` and treats this table's value only as a fallback.
+The agents read this file to decide who should own a task. People work across
+several projects; each project's board lists which of them are on its team.
+For current workload, run `python3 scripts/board.py load`, which counts open
+tasks (todo + in_progress + blocked) across **all** projects and flags anyone
+with 4 or more as overloaded.
 
 | Handle | Name  | Role                 | Skills                                         | Availability            |
 |--------|-------|----------------------|------------------------------------------------|-------------------------|
@@ -13,7 +16,7 @@ The PM agent reads this file to decide who should own a task.
 ## Assignment rules
 
 1. Match the task's main skill to the person's skills first.
-2. Break ties by lowest current load.
+2. Break ties by lowest total load across projects. Avoid anyone overloaded.
 3. Respect availability: don't give Diego anything due the same afternoon.
 4. Config / environment / callback-URL / secrets work goes to Diego.
 5. Every feature gets a testing task owned by Chen.

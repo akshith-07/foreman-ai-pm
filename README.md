@@ -6,9 +6,11 @@ Built for the [Flip the Switch Hackathon](https://www.wemakedevs.org/hackathons/
 Small teams rarely have a dedicated project manager, so developers lose hours
 breaking down work, deciding who owns what, chasing updates and writing status
 reports. Foreman puts **four AI agents** in the team's chat room through
-[Switch](https://docs.switchagents.ai). They handle that coordination
-alongside the humans, and **a human approves every assignment**. A live
-dashboard shows the board changing as the team and agents talk.
+[Switch](https://docs.switchagents.ai). They run **all of the team's
+projects** from one room: creating projects from a chat message, planning
+and assigning work, tracking blockers, balancing workload across projects
+and reporting. **A human approves every assignment.** A live dashboard shows
+the portfolio and each board changing as the team and agents talk.
 
 > Demo video: _<add link>_
 
@@ -16,20 +18,21 @@ dashboard shows the board changing as the team and agents talk.
 
 | Agent | Job |
 |---|---|
-| `@foreman-pm` | Breaks requests into tasks, applies human decisions, resolves blockers, answers "what's blocking the release?" |
-| `@foreman-assigner` | Picks an owner for each task from skills, workload and availability, and gives a reason for each pick |
+| `@foreman-pm` | Creates projects, breaks requests into tasks, applies human decisions, resolves blockers, answers status questions for one project or all of them |
+| `@foreman-assigner` | Picks an owner for each task from skills, **workload across all projects** and availability, with a reason for each pick |
 | `@foreman-tracker` | Records progress and blockers, follows up with owners, escalates blockers to the PM |
-| `@foreman-reporter` | Writes daily standups and weekly reports, saved to `reports/` |
+| `@foreman-reporter` | Writes daily standups, weekly reports and portfolio reports, saved to `reports/` |
 
 ## What it looks like in the room
 
 | Someone says | What happens |
 |---|---|
-| `@foreman-pm We need Google OAuth by Friday` | The PM creates tasks, then hands off to **@foreman-assigner**, which proposes an owner for each with a reason. |
+| `@foreman-pm Start a project for the Acme mobile app, v1.0 due 2026-12-01, team Aisha, Ben and Chen` | The PM creates project **ACME**. It appears as a new tab and card on the dashboard. |
+| `@foreman-pm INV needs Google OAuth login by Friday` | The PM creates INV tasks, then hands off to **@foreman-assigner**, which proposes owners while checking each person's load across every project. |
 | `@foreman-pm approve` | The proposed tasks go on the board. Only a human can do this. |
-| `@foreman-tracker Ben here: frontend is blocked on the callback URL` | The Tracker marks it blocked and hands it to **@foreman-pm**, which finds the existing config task and asks its owner to start it. |
-| `@foreman-pm What is everyone working on, and what is blocking our release?` | A status report from the board: health verdict, blockers, overdue work and each person's tasks. |
-| `@foreman-pm send today's standup` | The PM hands off to **@foreman-reporter**, which writes and saves the standup. It appears on the dashboard. |
+| `@foreman-tracker Ben here: INV-5 is blocked on the callback URL` | The Tracker marks it blocked and hands it to **@foreman-pm**, which finds the existing config task and asks its owner to start it. |
+| `@foreman-pm How are all our projects doing, and is anyone overloaded?` | A portfolio report: health per project, workload across projects and what needs attention first. |
+| `@foreman-pm send the portfolio report` | The PM hands off to **@foreman-reporter**, which writes and saves the report. It appears on the dashboard. |
 
 ## How Switch is used
 
@@ -69,21 +72,26 @@ flowchart LR
   PM -- "propose owners" --> AS
   TR -- "blocker handoff" --> PM
   PM -- "write report" --> RP
-  PM & AS & TR & RP -- "scripts/board.py" --> B[("tasks.json<br/>+ reports/")]
+  PM & AS & TR & RP -- "scripts/board.py" --> B[("projects/*.json<br/>one board per project<br/>+ reports/")]
   B -. "read-only" .-> D["Live dashboard<br/>scripts/dashboard.py"]
   AS -. reads .-> T["team.md"]
 ```
 
-- **`scripts/board.py`** is the only way to change the board. It validates
+- **`scripts/board.py`** is the only way to change a board. It validates
   every write, refuses approved tasks without an owner, refuses to start
-  unapproved tasks, and records who changed what and when.
-- **`tasks.json`** is the board and the agents' shared memory.
+  unapproved tasks, only lets project members own a project's tasks, and
+  records who changed what and when.
+- **`projects/<key>.json`** holds one board per project. Task ids carry the
+  project key (`INV-4`, `WEB-2`), so an update can't land on the wrong
+  project. Together, these files are the agents' shared memory.
 - **`AGENTS.md`** holds the shared rules: the roster, who hands off to whom,
   and the hard limits. Codex reads it automatically.
 - **`agents/*.md`** are the role files. The instructions in Switch only point
   to them, so changes in the repo apply without touching Switch.
-- **The dashboard** (`dashboard/` + `scripts/dashboard.py`) shows a live
-  Kanban where cards slide between columns as agents move them. It also has
+- **The dashboard** (`dashboard/` + `scripts/dashboard.py`) has an **All
+  projects** view with a health card per project and workload across
+  projects, plus a tab per project with a live Kanban where cards slide
+  between columns as agents move them. It also has
   a release-health badge and KPIs, an Agents panel that lights up the agent
   that just acted, team workload, an activity timeline, pop-up
   notifications and the latest report. Plain HTML, CSS and JS, with no
@@ -141,15 +149,21 @@ AI coding agent you're signed in to: Codex, Claude Code or OpenCode.
 ## Board CLI
 
 ```bash
-python3 scripts/board.py show         # Kanban view
-python3 scripts/board.py report       # status report with release health
-python3 scripts/board.py standup      # daily standup data
-python3 scripts/board.py weekly       # weekly report data
-python3 scripts/board.py load         # open tasks per person
-python3 scripts/board.py validate     # check the board
-python3 scripts/board.py reset        # back to the demo seed (clears reports)
-python3 scripts/board.py -h           # all commands
+python3 scripts/board.py projects            # list projects with health
+python3 scripts/board.py portfolio           # all projects + workload across them
+python3 scripts/board.py new-project --name "Acme Mobile App" --key ACME --release v1.0 --due 2026-12-01 --team aisha,ben,chen --by you
+python3 scripts/board.py show -p INV         # one project's Kanban
+python3 scripts/board.py report -p INV       # status report with release health
+python3 scripts/board.py standup -p INV      # daily standup data
+python3 scripts/board.py load                # open tasks per person, all projects
+python3 scripts/board.py validate            # check every project
+python3 scripts/board.py reset               # back to the demo seed (clears reports)
+python3 scripts/board.py -h                  # all commands
 ```
+
+The demo starts with two projects, **INV** (Invoicely v1.2) and **WEB**
+(Website Revamp), which share people. That's why the cross-project
+workload view matters.
 
 ## Repo layout
 
@@ -161,9 +175,9 @@ agents/tracker.md           foreman-tracker role
 agents/reporter.md          foreman-reporter role
 switch/room-instructions.md
 team.md                     team skills, availability, assignment rules
-seed/tasks.seed.json        demo starting state
-tasks.json                  live board
-reports/                    saved standups and weekly reports
+seed/projects/*.json        demo starting state (INV, WEB)
+projects/                   live boards, one per project (created by board.py)
+reports/                    saved standups, weekly and portfolio reports
 scripts/board.py            board CLI the agents use
 scripts/dashboard.py        dashboard server (serves dashboard/ + /api/state)
 dashboard/                  index.html, styles.css, app.js (live read-only UI)
@@ -198,5 +212,6 @@ demo/script.md              demo walkthrough
 ## What's next
 
 - Scheduled daily check-ins and standups.
-- Syncing the board with Jira, Linear or GitHub Issues.
+- Syncing boards with Jira, Linear or GitHub Issues.
+- Automatic rebalancing suggestions when someone is overloaded.
 - Learning owner preferences from past assignments.
