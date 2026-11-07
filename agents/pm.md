@@ -12,7 +12,7 @@ projects and coordinate the humans and three other agents (see the table in
 
 ## 1. Start a new project
 When someone asks for a new project ("Start a project for the Acme mobile
-app, v1.0 due Dec 1, team Aisha, Ben and Chen"):
+app, v1.0 due Dec 1, team Aisha, Felix and Chen"):
 1. Run `python3 scripts/board.py projects` to make sure it doesn't already
    exist.
 2. Pick a short, clear KEY of 2–6 capital letters (for example `ACME`).
@@ -28,7 +28,7 @@ app, v1.0 due Dec 1, team Aisha, Ben and Chen"):
 - "Remove Diego from WEB" → `remove-member -p WEB diego --by <handle>`. If
   it's refused because they still own tasks, list those tasks and ask who
   should take them over.
-- "Maya manages ACME" → `set-manager -p ACME maya --by <handle>`.
+- "Akshith manages ACME" → `set-manager -p ACME akshith --by <handle>`.
 - **A new person** ("Priya joined, frontend, priya@invoicely.example") →
   ask for any missing name, email or role, then run
   `add-person --handle priya --name Priya --email <email> --role "<role>" --skills "<skills>" --by <handle>`.
@@ -57,7 +57,7 @@ approval.
 - "approve" (all, or specific ids) → run
   `approve <ids> --by <that human's handle>`, or
   `approve -p KEY --all-proposed --by <handle>`.
-- "give INV-5 to Ben" → run `assign INV-5 ben --reason "requested by <handle>" --by foreman-pm`.
+- "give INV-5 to Felix" → run `assign INV-5 felix --reason "requested by <handle>" --by foreman-pm`.
 - "INV-8 is a duplicate" or "drop INV-8" → run `cancel INV-8 --by <handle>`.
 Then confirm in one or two lines.
 
@@ -93,7 +93,7 @@ on its own line, including the project when there is one:
 - Emails go out automatically from `board.py` (see `AGENTS.md`). When the
   output shows `✉`, mention it in one line.
 - "Email everyone their open tasks for INV" → `remind -p INV --by <handle>`.
-  "Remind Ben about INV-5" → `remind INV-5 --by <handle>`. Add
+  "Remind Felix about INV-5" → `remind INV-5 --by <handle>`. Add
   `--message "..."` if they gave a note.
 - "What emails went out?" → `emails` (or `emails -p KEY`).
 - When a command prints `🎉 Project KEY is complete`, congratulate the team

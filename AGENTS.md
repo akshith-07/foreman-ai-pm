@@ -25,12 +25,20 @@ Your own role file is `agents/<your-name-without-foreman->.md`, for example
   "Which project: INV, WEB, …?" instead of guessing.
 - Always write task ids with their prefix in chat (`INV-4`, never just `4`).
 
+## Who's who in chat
+- Mattermost username `user` (or `admin`) is **Akshith**, the engineering
+  manager. Record his decisions with `--by akshith`.
+- Mattermost username `felix` is **Felix**, frontend engineer. Record his
+  updates with `--by felix`.
+- If a message starts with a name ("Aisha here: …"), record that person,
+  for example `--by aisha`. These are teammates without chat accounts.
+
 ## People, teams and email
 - `python3 scripts/board.py team` lists everyone, with skills, availability
   and open tasks across projects. `team -p KEY` shows one project's team and
   its manager. Use this instead of guessing who exists.
 - Each project has a **team** (only team members can own its tasks) and a
-  **manager** (Maya by default), who is told when work is completed.
+  **manager** (Akshith by default), who is told when work is completed.
 - **Emails are sent automatically by `board.py`.** Don't send them any other
   way. The tool emails:
   - the owner when a human approves their task, or when approved work is

@@ -34,7 +34,7 @@ Allow about 40 minutes.
 |---|---|---|
 | 1.1 | `@foreman-pm list projects` | INV and WEB, each with its key, release, due date and health |
 | 1.2 | `@foreman-pm show the INV board` | INV-1 to INV-3 in the right columns |
-| 1.3 | `@foreman-pm who is on the INV team?` | A team table: Aisha, Ben, Chen, Diego, with Maya as manager |
+| 1.3 | `@foreman-pm who is on the INV team?` | A team table: Aisha, Felix, Chen, Diego, with Akshith as manager |
 
 ---
 
@@ -42,7 +42,7 @@ Allow about 40 minutes.
 
 | # | Send | ✅ Expected |
 |---|---|---|
-| 2.1 | `@foreman-pm Start a new project: Acme Mobile App, release v1.0 due 2026-12-01, team Aisha, Ben and Chen. It's our iOS and Android app.` | PM confirms **ACME** and offers to plan tasks. Dashboard: a new **ACME** tab and card appear. Mail: "New project: Acme Mobile App" to Aisha, Ben and Chen (Maya cc). |
+| 2.1 | `@foreman-pm Start a new project: Acme Mobile App, release v1.0 due 2026-12-01, team Aisha, Felix and Chen. It's our iOS and Android app.` | PM confirms **ACME** and offers to plan tasks. Dashboard: a new **ACME** tab and card appear. Mail: "New project: Acme Mobile App" to Aisha, Felix and Chen (Akshith cc). |
 | 2.2 | `@foreman-pm Priya just joined as a frontend engineer (React Native, iOS, Android), priya@invoicely.example. Add her to ACME.` | PM registers Priya and adds her to ACME. Dashboard: Priya appears in the workload panel. Mail: "You've joined Acme Mobile App" to Priya. |
 | 2.3 | `@foreman-pm Add Diego to ACME too.` | Diego added. Mail: welcome email to Diego. |
 | 2.4 | `@foreman-pm Actually remove Diego from ACME.` | Diego removed (he owns nothing there yet). No email. |
@@ -55,10 +55,10 @@ Allow about 40 minutes.
 | # | Send | ✅ Expected |
 |---|---|---|
 | 3.1 | `@foreman-pm ACME needs its first milestone: project setup, a login screen, push notifications, and testing. Due 2026-11-20.` | PM adds **3–4 unassigned** tasks (ACME-1…), then posts `@foreman-assigner please propose owners for ACME-…` |
-| 3.2 | *(wait)* | **Assigner** replies with a table of id, owner, reason and total load. It only uses ACME team members (Aisha, Ben, Chen, Priya); testing goes to Chen. Dashboard: cards under **Proposed** get owner avatars. **No emails yet.** |
+| 3.2 | *(wait)* | **Assigner** replies with a table of id, owner, reason and total load. It only uses ACME team members (Aisha, Felix, Chen, Priya); testing goes to Chen. Dashboard: cards under **Proposed** get owner avatars. **No emails yet.** |
 | 3.3 | `@foreman-pm approve` | PM approves all of them, and the cards slide to **To do**. Mail: one "You've been assigned…" email per owner. Pop-ups appear. |
-| 3.4 | `@foreman-pm INV needs Google OAuth login by 2026-11-13.` | PM creates INV tasks (INV-4…) and hands off to the Assigner. The Assigner proposes owners and mentions load across projects (for example "Ben also has WEB-1"). |
-| 3.5 | `@foreman-pm give the frontend OAuth task to Ben, approve the rest.` | PM reassigns if needed and approves. Mail: assignment emails. |
+| 3.4 | `@foreman-pm INV needs Google OAuth login by 2026-11-13.` | PM creates INV tasks (INV-4…) and hands off to the Assigner. The Assigner proposes owners and mentions load across projects (for example "Felix also has WEB-1"). |
+| 3.5 | `@foreman-pm give the frontend OAuth task to Felix, approve the rest.` | PM reassigns if needed and approves. Mail: assignment emails. |
 | 3.6 | `@foreman-pm INV also needs a task to configure the Google OAuth callback URLs.` | **No duplicate:** if a config task from 3.4 already covers it, PM points to it instead of adding a new one. If PM adds one anyway, go to 3.7. |
 | 3.7 | *(only if a duplicate was created)* `@foreman-pm INV-x is a duplicate, cancel it.` | PM runs cancel, and the card disappears. |
 
@@ -69,10 +69,10 @@ Allow about 40 minutes.
 | # | Send | ✅ Expected |
 |---|---|---|
 | 4.1 | `@foreman-tracker Aisha here: I've started the Google OAuth backend.` | The task moves to **In progress**. Its card slides on the dashboard. |
-| 4.2 | `@foreman-tracker Aisha here: the OAuth backend is done.` | The task moves to **Done**. Mail: "INV-x completed" **to Maya**, Aisha cc. The Tracker mentions the email. |
-| 4.3 | `@foreman-tracker Ben here: frontend login is blocked, the Google callback URL isn't configured yet.` | The task goes to **Blocked**, and INV turns **At risk** (red banner). The Tracker posts `@foreman-pm blocker on INV-x…` |
+| 4.2 | `@foreman-tracker Aisha here: the OAuth backend is done.` | The task moves to **Done**. Mail: "INV-x completed" **to Akshith**, Aisha cc. The Tracker mentions the email. |
+| 4.3 | `@foreman-tracker Felix here: frontend login is blocked, the Google callback URL isn't configured yet.` | The task goes to **Blocked**, and INV turns **At risk** (red banner). The Tracker posts `@foreman-pm blocker on INV-x…` |
 | 4.4 | *(wait)* | **PM** answers the handoff. It points to the existing config task and @mentions Diego to start it. It doesn't create a duplicate. |
-| 4.5 | `@foreman-tracker Diego here: callback URLs are configured, Ben is unblocked.` | The config task is done and the frontend task is unblocked (In progress). INV goes back to On track if nothing else is blocked. Mail: completion email to Maya. |
+| 4.5 | `@foreman-tracker Diego here: callback URLs are configured, Felix is unblocked.` | The config task is done and the frontend task is unblocked (In progress). INV goes back to On track if nothing else is blocked. Mail: completion email to Akshith. |
 | 4.6 | `@foreman-tracker check in on WEB` | The Tracker posts one line per open WEB task, @mentioning each owner with a specific question. |
 | 4.7 | `@foreman-tracker email everyone their open INV tasks` | Mail: one reminder per INV owner, each listing their open tasks. |
 
@@ -106,8 +106,8 @@ Finish every ACME task so the whole project completes.
 | # | Send | ✅ Expected |
 |---|---|---|
 | 7.1 | `@foreman-pm show the ACME board` | Note the ACME task ids and owners. |
-| 7.2 | For each ACME task: `@foreman-tracker <Owner> here: ACME-<n> is done.` *(or batch them: "Priya here: ACME-1 and ACME-2 are done")* | Each task moves to Done, and Maya gets a completion email for each. |
-| 7.3 | *(after the last one)* | 🎉 The Tracker says **ACME is complete**. Dashboard: the ACME card and badge turn **Completed**. Mail: "🎉 Project completed: Acme Mobile App v1.0" to Maya, with the whole team in cc. |
+| 7.2 | For each ACME task: `@foreman-tracker <Owner> here: ACME-<n> is done.` *(or batch them: "Priya here: ACME-1 and ACME-2 are done")* | Each task moves to Done, and Akshith gets a completion email for each. |
+| 7.3 | *(after the last one)* | 🎉 The Tracker says **ACME is complete**. Dashboard: the ACME card and badge turn **Completed**. Mail: "🎉 Project completed: Acme Mobile App v1.0" to Akshith, with the whole team in cc. |
 | 7.4 | `@foreman-pm How are all our projects doing?` | ACME is reported as **Completed**, and it isn't listed under "needs attention". |
 
 ---

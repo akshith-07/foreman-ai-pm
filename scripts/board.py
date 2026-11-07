@@ -11,16 +11,16 @@ and every change leaves an audit trail.
 
 Projects:
   board.py projects                       list projects with health
-  board.py new-project --name "Acme Mobile App" --key ACME --release v1.0 --due 2026-12-01 [--team aisha,ben] [--description "..."] --by foreman-pm
+  board.py new-project --name "Acme Mobile App" --key ACME --release v1.0 --due 2026-12-01 [--team aisha,felix] [--description "..."] --by foreman-pm
   board.py use ACME                       set the active project
   board.py portfolio                      all projects + cross-project workload
 
 People & teams:
   board.py team [-p KEY]                  people, skills, availability, load (optionally one project's team)
   board.py add-person --handle priya --name Priya --email priya@example.com --role "Frontend engineer" [--skills "..."] [--manager] --by <who>
-  board.py add-member -p KEY priya [ben ...] --by <who>
+  board.py add-member -p KEY priya [felix ...] --by <who>
   board.py remove-member -p KEY priya --by <who>    (refused while they own open tasks there)
-  board.py set-manager -p KEY maya --by <who>
+  board.py set-manager -p KEY akshith --by <who>
 
 Email (automatic on approve, reassign, task done, project completed, member added):
   board.py remind [-p KEY | INV-4] [--message "..."] --by <who>   email owners their open tasks
@@ -30,7 +30,7 @@ Email (automatic on approve, reassign, task done, project completed, member adde
 Tasks (-p KEY optional when the id says it, e.g. INV-4):
   board.py show [-p KEY]
   board.py add -p KEY --title "..." --epic Auth --priority high --due 2026-11-13 [--owner aisha] --by foreman-pm
-  board.py assign INV-4 ben --reason "React + login flows" --by foreman-assigner
+  board.py assign INV-4 felix --reason "React + login flows" --by foreman-assigner
   board.py approve INV-4 INV-5 --by <human>        (or: approve -p KEY --all-proposed)
   board.py cancel INV-8 --by <human>               (proposed tasks only)
   board.py status INV-4 in_progress|done|todo --by <who>

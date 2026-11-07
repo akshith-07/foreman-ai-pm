@@ -27,12 +27,12 @@ the portfolio and each board changing as the team and agents talk.
 
 | Someone says | What happens |
 |---|---|
-| `@foreman-pm Start a project for the Acme mobile app, v1.0 due 2026-12-01, team Aisha, Ben and Chen` | The PM creates project **ACME**. It appears as a new tab and card on the dashboard. |
+| `@foreman-pm Start a project for the Acme mobile app, v1.0 due 2026-12-01, team Aisha, Felix and Chen` | The PM creates project **ACME**. It appears as a new tab and card on the dashboard. |
 | `@foreman-pm INV needs Google OAuth login by Friday` | The PM creates INV tasks, then hands off to **@foreman-assigner**, which proposes owners while checking each person's load across every project. |
 | `@foreman-pm approve` | The proposed tasks go on the board. Only a human can do this. |
-| `@foreman-tracker Ben here: INV-5 is blocked on the callback URL` | The Tracker marks it blocked and hands it to **@foreman-pm**, which finds the existing config task and asks its owner to start it. |
+| `@foreman-tracker Felix here: INV-5 is blocked on the callback URL` | The Tracker marks it blocked and hands it to **@foreman-pm**, which finds the existing config task and asks its owner to start it. |
 | `@foreman-pm Priya joined as a frontend engineer, priya@invoicely.example. Add her to ACME.` | The PM registers Priya and adds her to the ACME team. She gets a welcome email. |
-| `@foreman-tracker Aisha here: INV-4 is done` | The task moves to Done, and **Maya (the manager) gets an email**, with Aisha in cc. When the last task of a project is done, the project turns **Completed** and the whole team is emailed. |
+| `@foreman-tracker Aisha here: INV-4 is done` | The task moves to Done, and **Akshith (the manager) gets an email**, with Aisha in cc. When the last task of a project is done, the project turns **Completed** and the whole team is emailed. |
 | `@foreman-pm email everyone their open INV tasks` | Each owner gets one reminder email listing their open work. |
 | `@foreman-pm How are all our projects doing, and is anyone overloaded?` | A portfolio report: health per project, workload across projects and what needs attention first. |
 | `@foreman-pm send the portfolio report` | The PM hands off to **@foreman-reporter**, which writes and saves the report. It appears on the dashboard. |
@@ -94,7 +94,7 @@ The dashboard is **read-only**. Every change happens in the Switch room.
 ```mermaid
 flowchart LR
   subgraph Room["Switch room: #project-room (Mattermost)"]
-    H["Humans<br/>Aisha · Ben · Chen · Diego"]
+    H["Humans<br/>Aisha · Felix · Chen · Diego"]
     PM["@foreman-pm"]
     AS["@foreman-assigner"]
     TR["@foreman-tracker"]
@@ -184,7 +184,7 @@ AI coding agent you're signed in to: Codex, Claude Code or OpenCode.
 ```bash
 python3 scripts/board.py projects            # list projects with health
 python3 scripts/board.py portfolio           # all projects + workload across them
-python3 scripts/board.py new-project --name "Acme Mobile App" --key ACME --release v1.0 --due 2026-12-01 --team aisha,ben,chen --by you
+python3 scripts/board.py new-project --name "Acme Mobile App" --key ACME --release v1.0 --due 2026-12-01 --team aisha,felix,chen --by you
 python3 scripts/board.py show -p INV         # one project's Kanban
 python3 scripts/board.py report -p INV       # status report with release health
 python3 scripts/board.py standup -p INV      # daily standup data
@@ -214,7 +214,7 @@ agents/reporter.md          foreman-reporter role
 switch/room-instructions.md
 team.md                     assignment rules
 seed/projects/*.json        demo starting state (INV, WEB)
-seed/people.json            demo people (Maya the manager, Aisha, Ben, Chen, Diego)
+seed/people.json            demo people (Akshith the manager, Aisha, Felix, Chen, Diego)
 projects/                   live boards, one per project (created by board.py)
 people.json                 live people registry (created by board.py)
 outbox/                     every notification email as .eml + log.jsonl

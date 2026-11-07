@@ -27,7 +27,7 @@ Rehearse every scene twice before recording.
 ## Scene 1: Create a project and build its team from chat (35 s)
 **You type:**
 ```
-@foreman-pm Start a new project: Acme Mobile App, release v1.0 due 2026-12-01, team Aisha, Ben and Chen.
+@foreman-pm Start a new project: Acme Mobile App, release v1.0 due 2026-12-01, team Aisha, Felix and Chen.
 ```
 **Expected:** the PM creates **ACME**, and a new **ACME** tab and card
 appear on the dashboard.
@@ -52,7 +52,7 @@ Click the **INV** tab on the dashboard.
 - The PM adds 3–4 unassigned INV tasks (INV-4 onward), then posts
   "@foreman-assigner please propose owners…".
 - The Assigner replies with owners and reasons, mentioning load across
-  projects (for example "Ben already has work in WEB").
+  projects (for example "Felix already has work in WEB").
 - The cards appear under **Proposed**, then get owners.
 
 **You type:**
@@ -70,11 +70,11 @@ Click the **INV** tab on the dashboard.
 @foreman-tracker Aisha here: backend OAuth is done.
 ```
 ```
-@foreman-tracker Ben here: frontend login is blocked, the Google callback URL isn't configured yet.
+@foreman-tracker Felix here: frontend login is blocked, the Google callback URL isn't configured yet.
 ```
 **Expected:**
 - The cards move to **Done** and **Blocked**, and INV turns **At risk**.
-- **Maya, the manager, is emailed** that the backend task was completed.
+- **Akshith, the manager, is emailed** that the backend task was completed.
   Optional: flash the Mailpit inbox at http://127.0.0.1:8026.
 - The Tracker hands off with "@foreman-pm blocker on INV-x…".
 - The PM points to the existing config task and @mentions Diego.
@@ -88,7 +88,7 @@ Click **All projects** on the dashboard.
 ```
 **Expected:**
 - one line per project (INV at risk, WEB and ACME status);
-- workload across projects, flagging Ben if he's overloaded;
+- workload across projects, flagging Felix if he's overloaded;
 - which project needs attention first.
 
 ## Scene 5: Portfolio report, PM to Reporter handoff (25 s)

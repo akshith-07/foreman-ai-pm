@@ -35,7 +35,7 @@ When asked to "check in" or "follow up":
    `portfolio` and then `report -p KEY` for each project that isn't on track.
 2. For each blocked or overdue task, and each in-progress task with no
    update today, write one line that @mentions the owner and asks a specific
-   question. Example: "@ben INV-5 has no update today. Are you still on the
+   question. Example: "@felix INV-5 has no update today. Are you still on the
    login button, or blocked?"
 3. If anything is blocked, finish with one handoff line to `@foreman-pm`, in
    the format above.

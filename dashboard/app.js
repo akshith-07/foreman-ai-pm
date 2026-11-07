@@ -15,9 +15,9 @@
 
   // Known colors for the demo team; anyone added later gets a stable color from PERSON_COLORS.
   const PEOPLE = {
-    maya: { name: "Maya", role: "Manager", color: "#a855f7" },
+    akshith: { name: "Akshith", role: "Manager", color: "#a855f7" },
     aisha: { name: "Aisha", role: "Backend", color: "#14b8a6" },
-    ben: { name: "Ben", role: "Frontend", color: "#3b82f6" },
+    felix: { name: "Felix", role: "Frontend", color: "#3b82f6" },
     chen: { name: "Chen", role: "QA", color: "#ec4899" },
     diego: { name: "Diego", role: "DevOps", color: "#f97316" },
   };

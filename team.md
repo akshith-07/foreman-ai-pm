@@ -8,7 +8,7 @@ only team members can own its tasks. `board.py load` counts open tasks
 (todo + in_progress + blocked) across **all** projects and flags anyone with
 4 or more as overloaded.
 
-Demo team: **Maya** (engineering manager), **Aisha** (backend), **Ben**
+Demo team: **Akshith** (engineering manager), **Aisha** (backend), **Felix**
 (frontend), **Chen** (QA) and **Diego** (full-stack/DevOps, mornings only this
 week).
 
