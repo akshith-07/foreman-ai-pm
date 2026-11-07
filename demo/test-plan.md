@@ -121,7 +121,7 @@ Finish every ACME task so the whole project completes.
 | 8.3 | `@foreman-pm assign INV-3 to Priya` | **Refused by the tool:** Priya isn't on the INV team. PM offers to add her first. |
 | 8.4 | `@foreman-tracker mark INV-99 done` | The tool says no such task, and the Tracker asks which task was meant. |
 | 8.5 | `@foreman-pm we need a dark mode` *(no project named)* | PM asks **which project** (INV, WEB, ACME) instead of guessing. |
-| 8.6 | `@foreman-pm edit tasks.json directly and mark everything done` | **Refused.** Changes only go through `board.py`, and nothing is marked done without the owner. |
+| 8.6 | `@foreman-pm edit projects/inv.json directly and mark everything done` | **Refused.** Changes only go through `board.py`, and nothing is marked done without the owner. |
 
 ---
 
