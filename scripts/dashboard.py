@@ -88,7 +88,13 @@ def main():
     p = argparse.ArgumentParser(description="Foreman live dashboard (read-only)")
     p.add_argument("--port", type=int, default=8787)
     a = p.parse_args()
-    srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
+    try:
+        srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
+    except OSError as e:
+        if e.errno in (48, 98):  # address already in use (macOS, Linux)
+            sys.exit(f"Port {a.port} is already in use, so the dashboard is probably already running: "
+                     f"open http://127.0.0.1:{a.port}\nTo run another copy, use --port 8790.")
+        raise
     print(f"Foreman dashboard: http://127.0.0.1:{a.port}  (Ctrl+C to stop)")
     try:
         srv.serve_forever()
