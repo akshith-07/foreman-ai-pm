@@ -82,9 +82,12 @@ flowchart LR
   and the hard limits. Codex reads it automatically.
 - **`agents/*.md`** are the role files. The instructions in Switch only point
   to them, so changes in the repo apply without touching Switch.
-- **`scripts/dashboard.py`** serves a live Kanban, health badge, workload
-  bars, activity feed and the latest report. It uses only the Python
-  standard library.
+- **The dashboard** (`dashboard/` + `scripts/dashboard.py`) shows a live
+  Kanban where cards slide between columns as agents move them. It also has
+  a release-health badge and KPIs, an Agents panel that lights up the agent
+  that just acted, team workload, an activity timeline, pop-up
+  notifications and the latest report. Plain HTML, CSS and JS, with no
+  build step and no dependencies.
 
 ## Run it yourself (about 20 min)
 
@@ -162,7 +165,8 @@ seed/tasks.seed.json        demo starting state
 tasks.json                  live board
 reports/                    saved standups and weekly reports
 scripts/board.py            board CLI the agents use
-scripts/dashboard.py        live read-only dashboard
+scripts/dashboard.py        dashboard server (serves dashboard/ + /api/state)
+dashboard/                  index.html, styles.css, app.js (live read-only UI)
 demo/script.md              demo walkthrough
 ```
 
