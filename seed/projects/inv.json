@@ -1,0 +1,67 @@
+{
+  "key": "INV",
+  "name": "Invoicely",
+  "description": "Invoicing SaaS for small businesses",
+  "release": {
+    "name": "v1.2",
+    "due": "2026-11-13"
+  },
+  "team": [
+    "aisha",
+    "felix",
+    "chen",
+    "diego"
+  ],
+  "manager": "akshith",
+  "created": "2026-10-20",
+  "completed": null,
+  "next_id": 4,
+  "log": [],
+  "tasks": [
+    {
+      "id": "INV-1",
+      "title": "Fix invoice PDF cutting off line items after page 1",
+      "epic": "Billing",
+      "owner": "diego",
+      "status": "in_progress",
+      "priority": "high",
+      "due": "2026-11-10",
+      "blocker": null,
+      "updates": [
+        {
+          "at": "2026-11-06",
+          "by": "diego",
+          "text": "Reproduced. Page-break logic ignores table height."
+        }
+      ]
+    },
+    {
+      "id": "INV-2",
+      "title": "Improve dashboard load time (target < 2s)",
+      "epic": "Performance",
+      "owner": "felix",
+      "status": "in_progress",
+      "priority": "medium",
+      "due": "2026-11-12",
+      "blocker": null,
+      "updates": [
+        {
+          "at": "2026-11-06",
+          "by": "felix",
+          "text": "Profiling done. Chart bundle is 1.4 MB; lazy-loading next."
+        }
+      ]
+    },
+    {
+      "id": "INV-3",
+      "title": "Regression test pass for v1.2",
+      "epic": "Release",
+      "owner": "chen",
+      "status": "todo",
+      "priority": "high",
+      "due": "2026-11-12",
+      "blocker": null,
+      "updates": []
+    }
+  ]
+}

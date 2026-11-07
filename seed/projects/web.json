@@ -1,0 +1,66 @@
+{
+  "key": "WEB",
+  "name": "Website Revamp",
+  "description": "New marketing site and blog for the Invoicely launch",
+  "release": {
+    "name": "Launch",
+    "due": "2026-11-20"
+  },
+  "team": [
+    "felix",
+    "chen",
+    "diego"
+  ],
+  "manager": "akshith",
+  "created": "2026-10-28",
+  "completed": null,
+  "next_id": 4,
+  "log": [],
+  "tasks": [
+    {
+      "id": "WEB-1",
+      "title": "Redesign landing page hero and pricing section",
+      "epic": "Design",
+      "owner": "felix",
+      "status": "in_progress",
+      "priority": "high",
+      "due": "2026-11-14",
+      "blocker": null,
+      "updates": [
+        {
+          "at": "2026-11-05",
+          "by": "felix",
+          "text": "Hero layout approved; building the pricing table."
+        }
+      ]
+    },
+    {
+      "id": "WEB-2",
+      "title": "Migrate blog posts to the new CMS",
+      "epic": "Content",
+      "owner": "diego",
+      "status": "todo",
+      "priority": "medium",
+      "due": "2026-11-17",
+      "blocker": null,
+      "updates": []
+    },
+    {
+      "id": "WEB-3",
+      "title": "SEO audit of the current site",
+      "epic": "SEO",
+      "owner": "chen",
+      "status": "done",
+      "priority": "low",
+      "due": "2026-11-06",
+      "blocker": null,
+      "updates": [
+        {
+          "at": "2026-11-05",
+          "by": "chen",
+          "text": "Audit done: 14 broken links, missing meta descriptions."
+        }
+      ]
+    }
+  ]
+}

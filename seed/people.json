@@ -1,0 +1,40 @@
+{
+  "people": {
+    "akshith": {
+      "name": "Akshith",
+      "email": "akshith@invoicely.example",
+      "role": "Engineering manager",
+      "skills": "Planning, releases, stakeholder updates",
+      "availability": "Full time",
+      "manager": true
+    },
+    "aisha": {
+      "name": "Aisha",
+      "email": "aisha@invoicely.example",
+      "role": "Backend engineer",
+      "skills": "Node.js, auth, OAuth/OIDC, Postgres, APIs",
+      "availability": "Full time"
+    },
+    "felix": {
+      "name": "Felix",
+      "email": "felix@invoicely.example",
+      "role": "Frontend engineer",
+      "skills": "React, TypeScript, UI, login flows, web performance",
+      "availability": "Full time"
+    },
+    "chen": {
+      "name": "Chen",
+      "email": "chen@invoicely.example",
+      "role": "QA engineer",
+      "skills": "Test plans, Playwright, regression, security testing",
+      "availability": "Full time"
+    },
+    "diego": {
+      "name": "Diego",
+      "email": "diego@invoicely.example",
+      "role": "Full-stack / DevOps",
+      "skills": "CI/CD, cloud config, env vars, secrets, PDFs, caching",
+      "availability": "Mornings only this week"
+    }
+  }
+}
