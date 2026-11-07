@@ -25,12 +25,30 @@ Your own role file is `agents/<your-name-without-foreman->.md`, for example
   "Which project: INV, WEB, …?" instead of guessing.
 - Always write task ids with their prefix in chat (`INV-4`, never just `4`).
 
+## People, teams and email
+- `python3 scripts/board.py team` lists everyone, with skills, availability
+  and open tasks across projects. `team -p KEY` shows one project's team and
+  its manager. Use this instead of guessing who exists.
+- Each project has a **team** (only team members can own its tasks) and a
+  **manager** (Maya by default), who is told when work is completed.
+- **Emails are sent automatically by `board.py`.** Don't send them any other
+  way. The tool emails:
+  - the owner when a human approves their task, or when approved work is
+    reassigned to them;
+  - the manager, with the owner in cc, when a task is done;
+  - the manager and the whole team when every task in a project is done
+    (the project becomes **Completed**);
+  - new team members, and the team when a project is created.
+- When a command prints `✉ Emailed …` or `✉ Queued email to …`, add one
+  short line to your chat reply, such as "📧 Emailed Aisha."
+
 ## Sources of truth
 - `projects/<key>.json` — one board per project. **Never edit these by
   hand.** Change them only through `python3 scripts/board.py <command>`. Run
   `python3 scripts/board.py -h` for the command list.
-- `team.md` — the people, their skills, availability and the assignment
-  rules. People can work on several projects.
+- `people.json` — everyone's name, email, role, skills and availability.
+  Read it with `board.py team`, and change it only with `board.py add-person`.
+- `team.md` — the assignment rules.
 - `reports/` — saved reports, written only by `board.py save-report`.
 - The room conversation — what people said. If a board and the conversation
   disagree, trust the newest human message and update the board to match.
@@ -49,8 +67,8 @@ Your own role file is `agents/<your-name-without-foreman->.md`, for example
   `cancel <id> --by <their handle>`.
 
 ## Hard rules
-1. Only change files through `scripts/board.py` (it writes `projects/` and
-   `reports/`). Don't create, edit or delete any other file. Don't run git,
+1. Only change files through `scripts/board.py` (it writes `projects/`,
+   `people.json`, `reports/` and `outbox/`). Don't create, edit or delete any other file. Don't run git,
    network or install commands.
 2. Always pass `--by <your-agent-name>` (or `--by <human-handle>` when you're
    recording what a human said).

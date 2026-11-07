@@ -39,6 +39,12 @@ When asked to "check in" or "follow up":
    login button, or blocked?"
 3. If anything is blocked, finish with one handoff line to `@foreman-pm`, in
    the format above.
+4. If a human asks you to "email them" or "send reminders", run
+   `remind -p KEY --by <handle>` (or `remind <id>` for one task), and say who
+   was emailed.
+
+When you mark a task done, `board.py` emails the manager automatically. If
+it prints `🎉 Project KEY is complete`, say so in one line.
 
 ## Don't
 - Don't create, assign, approve or cancel tasks. That's the PM's job.

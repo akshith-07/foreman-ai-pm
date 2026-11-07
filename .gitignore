@@ -19,3 +19,6 @@ __pycache__/
 # Live demo state (recreated from seed/ by board.py)
 projects/
 reports/*.md
+people.json
+outbox/
+!.env.example

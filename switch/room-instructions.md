@@ -16,6 +16,9 @@ Foreman.
 - @foreman-reporter writes standups, weekly reports and portfolio reports.
 - Each project has a KEY, and task ids start with it (INV-4, WEB-2). Name
   the project when it isn't obvious.
+- Each project has a team and a manager. Humans decide who joins or leaves.
+- Foreman emails owners when their task is approved, and the manager when
+  work or a whole project is completed.
 - Humans approve every assignment. Nothing is final until a person says
   "approve".
 - Boards live in `projects/` and are changed only through `scripts/board.py`.

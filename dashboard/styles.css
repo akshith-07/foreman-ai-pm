@@ -346,6 +346,24 @@ h2 { margin: 0; }
 
 .foot { color: var(--muted); font-size: 12px; text-align: center; padding: 14px 24px 22px; }
 
+/* ---------- Notifications ---------- */
+.mail { max-height: 220px; }
+.mail .ev { grid-template-columns: 26px 1fr auto; align-items: start; }
+.mail-ic { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 13px;
+  background: var(--accent-soft); color: var(--accent); }
+.mail-ic.done { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.mail-ic.party { background: color-mix(in srgb, #eab308 18%, transparent); }
+.mstat { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 5px; white-space: nowrap; }
+.mstat.sent { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.mstat.queued { color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); }
+.mstat.failed { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+
+/* Completed projects */
+.health[data-v="Completed"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); }
+.health[data-v="Completed"] .health-dot, .hdot[data-v="Completed"] { background: var(--accent); }
+.pill[data-v="Completed"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.proj.completed { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--panel)), var(--panel)); }
+
 /* ---------- Toasts ---------- */
 .toasts { position: fixed; left: 24px; bottom: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 50; pointer-events: none; }
 .toast {

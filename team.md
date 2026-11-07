@@ -1,17 +1,16 @@
-# Team (fictional demo team)
+# Team and assignment rules (fictional demo team)
 
-The agents read this file to decide who should own a task. People work across
-several projects; each project's board lists which of them are on its team.
-For current workload, run `python3 scripts/board.py load`, which counts open
-tasks (todo + in_progress + blocked) across **all** projects and flags anyone
-with 4 or more as overloaded.
+The people themselves (name, email, role, skills, availability) live in
+`people.json`. See them with `python3 scripts/board.py team`, or
+`team -p KEY` for one project. New people are added with `board.py add-person`.
+People work across several projects; each project lists its own team, and
+only team members can own its tasks. `board.py load` counts open tasks
+(todo + in_progress + blocked) across **all** projects and flags anyone with
+4 or more as overloaded.
 
-| Handle | Name  | Role                 | Skills                                         | Availability            |
-|--------|-------|----------------------|------------------------------------------------|-------------------------|
-| aisha  | Aisha | Backend engineer     | Node.js, auth, OAuth/OIDC, Postgres, APIs      | Full time               |
-| ben    | Ben   | Frontend engineer    | React, TypeScript, UI, login flows, perf (web) | Full time               |
-| chen   | Chen  | QA engineer          | Test plans, Playwright, regression, security   | Full time               |
-| diego  | Diego | Full-stack / DevOps  | CI/CD, cloud config, env vars, PDFs, caching   | Mornings only this week |
+Demo team: **Maya** (engineering manager), **Aisha** (backend), **Ben**
+(frontend), **Chen** (QA) and **Diego** (full-stack/DevOps, mornings only this
+week).
 
 ## Assignment rules
 

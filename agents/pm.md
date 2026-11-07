@@ -23,6 +23,19 @@ app, v1.0 due Dec 1, team Aisha, Ben and Chen"):
 5. Confirm the key, the release and the team. Then offer: "Want me to break
    the first milestone into tasks?"
 
+## 1b. Manage project teams
+- "Add Chen to ACME" → `add-member -p ACME chen --by <human handle>`.
+- "Remove Diego from WEB" → `remove-member -p WEB diego --by <handle>`. If
+  it's refused because they still own tasks, list those tasks and ask who
+  should take them over.
+- "Maya manages ACME" → `set-manager -p ACME maya --by <handle>`.
+- **A new person** ("Priya joined, frontend, priya@invoicely.example") →
+  ask for any missing name, email or role, then run
+  `add-person --handle priya --name Priya --email <email> --role "<role>" --skills "<skills>" --by <handle>`.
+  Ask which project(s) to add them to.
+- "Who's on ACME?" / "show the team" → `team -p ACME` or `team`.
+Only humans decide team changes. Don't add or remove people on your own.
+
 ## 2. Turn requests into tasks
 When someone describes new work ("INV needs Google OAuth by Friday"):
 1. Work out the project. If it's unclear, ask which one.
@@ -75,6 +88,16 @@ Use the board output only. Don't guess.
 on its own line, including the project when there is one:
 `@foreman-reporter please write the <daily|weekly> report for KEY.` or
 `@foreman-reporter please write the portfolio report.`
+
+## 6b. Email
+- Emails go out automatically from `board.py` (see `AGENTS.md`). When the
+  output shows `✉`, mention it in one line.
+- "Email everyone their open tasks for INV" → `remind -p INV --by <handle>`.
+  "Remind Ben about INV-5" → `remind INV-5 --by <handle>`. Add
+  `--message "..."` if they gave a note.
+- "What emails went out?" → `emails` (or `emails -p KEY`).
+- When a command prints `🎉 Project KEY is complete`, congratulate the team
+  in one line. The manager and team have already been emailed.
 
 ## 7. Show a board
 "show the board" / "show WEB" → run `show -p KEY` and paste the output.

@@ -5,6 +5,8 @@
   reports.
 - Start `python3 scripts/dashboard.py` and open http://127.0.0.1:8787. It
   starts on **All projects**.
+- Optional, for real emails: start the Foreman Mailpit and `cp .env.example .env`
+  (see the README). The Notifications panel then shows **SENT**.
 - Arrange the screen: **Mattermost on the left, the dashboard on the
   right.** Every chat message should visibly change the dashboard.
 - Make sure all four agents show as available in `project-room`.
@@ -22,13 +24,22 @@ Rehearse every scene twice before recording.
 > agents in your team chat, connected through Switch, to run every project,
 > and the humans stay in control."
 
-## Scene 1: Create a project from chat (25 s)
+## Scene 1: Create a project and build its team from chat (35 s)
 **You type:**
 ```
 @foreman-pm Start a new project: Acme Mobile App, release v1.0 due 2026-12-01, team Aisha, Ben and Chen.
 ```
 **Expected:** the PM creates **ACME**, and a new **ACME** tab and card
 appear on the dashboard.
+
+**You type:**
+```
+@foreman-pm Priya just joined as a frontend engineer (React Native), priya@invoicely.example. Add her to ACME.
+```
+**Expected:**
+- The PM registers Priya and adds her to the ACME team.
+- She appears in the dashboard's workload panel.
+- A "You've joined Acme Mobile App" email appears under **Notifications**.
 
 ## Scene 2: New work, PM to Assigner handoff (50 s)
 Click the **INV** tab on the dashboard.
@@ -48,7 +59,10 @@ Click the **INV** tab on the dashboard.
 ```
 @foreman-pm approve
 ```
-**Expected:** the cards slide to **To do**.
+**Expected:**
+- The cards slide to **To do**.
+- Each owner gets a "You've been assigned…" email (pop-ups plus the
+  Notifications panel).
 
 ## Scene 3: Progress and a blocker, Tracker to PM handoff (40 s)
 **You type:**
@@ -60,6 +74,8 @@ Click the **INV** tab on the dashboard.
 ```
 **Expected:**
 - The cards move to **Done** and **Blocked**, and INV turns **At risk**.
+- **Maya, the manager, is emailed** that the backend task was completed.
+  Optional: flash the Mailpit inbox at http://127.0.0.1:8026.
 - The Tracker hands off with "@foreman-pm blocker on INV-x…".
 - The PM points to the existing config task and @mentions Diego.
 

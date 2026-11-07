@@ -31,6 +31,9 @@ the portfolio and each board changing as the team and agents talk.
 | `@foreman-pm INV needs Google OAuth login by Friday` | The PM creates INV tasks, then hands off to **@foreman-assigner**, which proposes owners while checking each person's load across every project. |
 | `@foreman-pm approve` | The proposed tasks go on the board. Only a human can do this. |
 | `@foreman-tracker Ben here: INV-5 is blocked on the callback URL` | The Tracker marks it blocked and hands it to **@foreman-pm**, which finds the existing config task and asks its owner to start it. |
+| `@foreman-pm Priya joined as a frontend engineer, priya@invoicely.example. Add her to ACME.` | The PM registers Priya and adds her to the ACME team. She gets a welcome email. |
+| `@foreman-tracker Aisha here: INV-4 is done` | The task moves to Done, and **Maya (the manager) gets an email**, with Aisha in cc. When the last task of a project is done, the project turns **Completed** and the whole team is emailed. |
+| `@foreman-pm email everyone their open INV tasks` | Each owner gets one reminder email listing their open work. |
 | `@foreman-pm How are all our projects doing, and is anyone overloaded?` | A portfolio report: health per project, workload across projects and what needs attention first. |
 | `@foreman-pm send the portfolio report` | The PM hands off to **@foreman-reporter**, which writes and saves the report. It appears on the dashboard. |
 
@@ -55,6 +58,36 @@ shared context and no humans involved. Switch provides:
   Switch supports works, including Claude Code and OpenCode.
 
 The dashboard is **read-only**. Every change happens in the Switch room.
+
+## Teams and email notifications
+
+- **People** live in `people.json`: name, email, role, skills and
+  availability, plus who's a manager. Each project has its own **team** and
+  **manager**. Only team members can own a project's tasks, and nobody can
+  be removed while they still own open work there.
+- **Email is triggered by the board tool itself**, not by the model, so it
+  can't be forgotten or invented:
+
+  | Event | Who gets emailed |
+  |---|---|
+  | A human approves a task, or approved work is reassigned | the task owner |
+  | A task is marked done | the project manager (owner in cc) |
+  | Every task in a project is done, so the project turns **Completed** | the manager and the whole team |
+  | Someone joins a project, or a project is created | the new member, or the team |
+  | `remind` | each owner, with their open tasks |
+
+- **Safe by default.** Every email is written to `outbox/` as a real `.eml`
+  file and shown in the dashboard's **Notifications** panel, but **nothing
+  is sent** until you configure SMTP. To see real emails locally without
+  sending anything outside your machine, run [Mailpit](https://mailpit.axllent.org):
+  ```bash
+  docker run -d --name foreman-mailpit -p 127.0.0.1:1025:1025 -p 127.0.0.1:8026:8025 axllent/mailpit
+  cp .env.example .env    # points Foreman at 127.0.0.1:1025
+  ```
+  Then open http://127.0.0.1:8026 to see the inbox. For a real mail server,
+  set `FOREMAN_SMTP_HOST`, `FOREMAN_SMTP_PORT`, `FOREMAN_SMTP_USER`,
+  `FOREMAN_SMTP_PASSWORD` and `FOREMAN_SMTP_TLS=1` in `.env`, which is
+  git-ignored.
 
 ## Architecture
 
@@ -156,6 +189,11 @@ python3 scripts/board.py show -p INV         # one project's Kanban
 python3 scripts/board.py report -p INV       # status report with release health
 python3 scripts/board.py standup -p INV      # daily standup data
 python3 scripts/board.py load                # open tasks per person, all projects
+python3 scripts/board.py team -p INV         # a project's team, manager, skills and load
+python3 scripts/board.py add-person --handle priya --name Priya --email priya@invoicely.example --role "Frontend engineer" --by you
+python3 scripts/board.py add-member -p ACME priya --by you
+python3 scripts/board.py remind -p INV --by you   # email owners their open tasks
+python3 scripts/board.py emails              # recent notifications and their status
 python3 scripts/board.py validate            # check every project
 python3 scripts/board.py reset               # back to the demo seed (clears reports)
 python3 scripts/board.py -h                  # all commands
@@ -174,9 +212,14 @@ agents/assigner.md          foreman-assigner role
 agents/tracker.md           foreman-tracker role
 agents/reporter.md          foreman-reporter role
 switch/room-instructions.md
-team.md                     team skills, availability, assignment rules
+team.md                     assignment rules
 seed/projects/*.json        demo starting state (INV, WEB)
+seed/people.json            demo people (Maya the manager, Aisha, Ben, Chen, Diego)
 projects/                   live boards, one per project (created by board.py)
+people.json                 live people registry (created by board.py)
+outbox/                     every notification email as .eml + log.jsonl
+scripts/notify.py           email: outbox by default, SMTP when configured
+.env.example                SMTP settings for a local Mailpit
 reports/                    saved standups, weekly and portfolio reports
 scripts/board.py            board CLI the agents use
 scripts/dashboard.py        dashboard server (serves dashboard/ + /api/state)
@@ -193,6 +236,8 @@ demo/script.md              demo walkthrough
 - Each change records who made it and when, and the dashboard's activity feed
   shows the full trail.
 - Agents only @mention each other to hand off work, which prevents loops.
+- Emails are triggered by board events in code, never written by the model.
+  They're saved locally and only sent when you explicitly configure SMTP.
 - The team in the demo is fictional, and no credentials are stored in the
   repo.
 

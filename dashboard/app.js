@@ -13,12 +13,22 @@
     { key: "done", name: "Done" },
   ];
 
+  // Known colors for the demo team; anyone added later gets a stable color from PERSON_COLORS.
   const PEOPLE = {
+    maya: { name: "Maya", role: "Manager", color: "#a855f7" },
     aisha: { name: "Aisha", role: "Backend", color: "#14b8a6" },
     ben: { name: "Ben", role: "Frontend", color: "#3b82f6" },
     chen: { name: "Chen", role: "QA", color: "#ec4899" },
     diego: { name: "Diego", role: "DevOps", color: "#f97316" },
   };
+  const PERSON_COLORS = ["#0ea5e9", "#84cc16", "#e11d48", "#8b5cf6", "#d97706", "#059669", "#db2777", "#2563eb"];
+  function syncPeople(db) {
+    for (const [h, p] of Object.entries(db || {})) {
+      const color = PEOPLE[h]?.color ||
+        PERSON_COLORS[[...h].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7) % PERSON_COLORS.length];
+      PEOPLE[h] = { name: p.name, role: p.role || "", color, manager: p.manager };
+    }
+  }
 
   const AGENTS = {
     "foreman-pm": { short: "PM", role: "Plans & decides", color: "#7c6cff" },
@@ -28,7 +38,7 @@
   };
 
   const PROJECT_COLORS = ["#7c6cff", "#0ea5e9", "#f97316", "#ec4899", "#22c55e", "#eab308", "#14b8a6", "#ef4444"];
-  const VERDICT_RANK = { "On track": 0, "At risk": 1, "Off track": 2 };
+  const VERDICT_RANK = { Completed: -1, "On track": 0, "At risk": 1, "Off track": 2 };
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) =>
@@ -99,6 +109,11 @@
     if (t.startsWith("Approved")) return "<b>approved</b> it";
     if (t.startsWith("Proposed")) return "proposed it";
     if ((m = t.match(/^Project created: (.*?), (.*)\.$/))) return `created project <b>${esc(m[1])}</b> · ${esc(m[2])}`;
+    if ((m = t.match(/^Project completed: (.*)\.$/))) return `🎉 <b>completed project</b> ${esc(m[1])}`;
+    if (t.startsWith("Project reopened")) return "reopened the project";
+    if ((m = t.match(/^Added to team: (.*)\.$/))) return `added <b>${esc(m[1].split(", ").map((h) => displayName(h.replace("@", ""))).join(", "))}</b> to the team`;
+    if ((m = t.match(/^Removed from team: @(.*)\.$/))) return `removed <b>${esc(displayName(m[1]))}</b> from the team`;
+    if ((m = t.match(/^Manager set to @(.*)\.$/))) return `made <b>${esc(displayName(m[1]))}</b> the manager`;
     if ((m = t.match(/^Assigned to @(\w+)\.(?: Reason: (.*))?$/))) return `assigned it to <b>${esc(displayName(m[1]))}</b>${m[2] ? ` · ${esc(m[2])}` : ""}`;
     if ((m = t.match(/^Reassigned @(\w+) -> @(\w+)\.(?: Reason: (.*))?$/))) return `reassigned it to <b>${esc(displayName(m[2]))}</b>${m[3] ? ` · ${esc(m[3])}` : ""}`;
     return esc(t);
@@ -172,7 +187,7 @@
     const ps = s.projects;
     const sum = (f) => ps.reduce((n, p) => n + f(p), 0);
     const done = sum((p) => p.health.done), total = sum((p) => p.health.total);
-    const risky = ps.filter((p) => p.health.verdict !== "On track");
+    const risky = ps.filter((p) => VERDICT_RANK[p.health.verdict] > 0);
     const worst = ps.reduce((w, p) => (VERDICT_RANK[p.health.verdict] > VERDICT_RANK[w] ? p.health.verdict : w), "On track");
     const over = Object.entries(s.people).filter(([, p]) => p.overloaded);
 
@@ -200,16 +215,17 @@
     const seg = (k) => `<i style="width:${(100 * c[k]) / total}%;background:var(--s-${k})"></i>`;
     const cnt = (k, n) => (c[k] ? `<span class="cnt"><i style="background:var(--s-${k})"></i>${c[k]} ${n}</span>` : "");
     const risk = h.reasons[0];
+    const doneNote = p.completed ? `🎉 Completed ${esc(String(p.completed).slice(0, 10))} · all ${h.total} tasks done` : `${h.done}/${h.total} approved tasks done`;
     return `
-      <button class="proj" type="button" data-key="${esc(p.key)}" style="--pc:${colorOf[p.key]}">
+      <button class="proj ${p.completed ? "completed" : ""}" type="button" data-key="${esc(p.key)}" style="--pc:${colorOf[p.key]}">
         <div class="proj-top"><span class="proj-key">${esc(p.key)}</span><span class="pill" data-v="${esc(h.verdict)}"><span class="hdot" data-v="${esc(h.verdict)}"></span>${esc(h.verdict)}</span></div>
         <div class="proj-name">${esc(p.name)}</div>
         <div class="proj-desc">${esc(p.description)}</div>
         <div class="proj-rel"><span><b>${esc(p.release.name)}</b> · due ${esc(p.release.due)}</span><span>${h.days_left}d left</span></div>
         <div class="pbar">${seg("done")}${seg("in_progress")}${seg("todo")}${seg("blocked")}${seg("proposed")}</div>
         <div class="proj-counts">${cnt("done", "done")}${cnt("in_progress", "in progress")}${cnt("todo", "to do")}${cnt("blocked", "blocked")}${cnt("proposed", "proposed")}${total === 1 && !Object.values(c).some(Boolean) ? '<span class="cnt">No tasks yet</span>' : ""}</div>
-        <div class="proj-team">${(p.team || []).map((m) => avatar(m)).join("")}</div>
-        <div class="proj-risk ${risk ? "bad" : ""}">${risk ? `⛔ ${esc(risk)}` : `${h.done}/${h.total} approved tasks done`}</div>
+        <div class="proj-team">${(p.team || []).map((m) => avatar(m)).join("")}${p.manager ? `<span class="cnt" style="margin-left:14px">Manager: ${esc(displayName(p.manager))}</span>` : ""}</div>
+        <div class="proj-risk ${risk ? "bad" : ""}">${risk ? `⛔ ${esc(risk)}` : doneNote}</div>
       </button>`;
   }
 
@@ -233,7 +249,7 @@
   function renderProjectHeader(s) {
     const p = s.project, h = p.health;
     $("project").textContent = `${p.name}`;
-    $("release").textContent = `${p.key} · ${p.release.name} · due ${p.release.due}${p.description ? " · " + p.description : ""}`;
+    $("release").textContent = `${p.key} · ${p.release.name} · due ${p.release.due}${p.manager ? " · manager " + displayName(p.manager) : ""}${p.description ? " · " + p.description : ""}`;
     document.title = `${h.verdict} · Foreman · ${p.name}`;
     $("k-progress").textContent = `${h.done}/${h.total}`;
     $("k-progress-lbl").textContent = "Tasks done";
@@ -432,6 +448,50 @@
     return out.join("");
   }
 
+  /* ---------- notifications (emails) ---------- */
+  const MAIL_ICON = { task_assigned: "✉", task_done: "✓", project_completed: "🎉", project_created: "★", member_added: "+", reminder: "⏰" };
+  const mailKey = (m) => `${m.at}|${m.file}`;
+  let seenMail = new Set();
+  const recipients = (m) => {
+    // Turn addresses back into names where we know them.
+    const byEmail = {};
+    for (const [h, p] of Object.entries(PEOPLE)) byEmail[`${h}@`] = p.name;
+    const nm = (a) => byEmail[a.split("@")[0] + "@"] || a;
+    return m.to.map(nm).join(", ") + (m.cc && m.cc.length ? ` (cc ${m.cc.map(nm).join(", ")})` : "");
+  };
+
+  function renderMail(s) {
+    $("mail-mode").textContent = s.mail_mode === "smtp" ? "sending via SMTP" : "outbox · not sent";
+    if (!s.emails.length) {
+      $("mail").innerHTML = `<li class="empty">No emails yet. Owners get one when a human approves their task; the manager when work is done.</li>`;
+      return;
+    }
+    $("mail").innerHTML = s.emails.map((m) => {
+      const ic = MAIL_ICON[m.event] || "✉";
+      const cls = m.event === "task_done" ? "done" : m.event === "project_completed" ? "party" : "";
+      const isNew = !firstEver && !seenMail.has(mailKey(m));
+      return `
+        <li class="ev ${isNew ? "new" : ""}" title="${esc(m.error || m.file)}">
+          <span class="mail-ic ${cls}">${ic}</span>
+          <div>
+            <div class="ev-text"><b>${esc(m.subject.replace(/^\[[A-Z0-9]+\]\s*/, ""))}</b></div>
+            <div class="ev-time">to ${esc(recipients(m))} · ${ago(m.at)}</div>
+          </div>
+          <span class="mstat ${esc(m.status)}">${esc(m.status)}</span>
+        </li>`;
+    }).join("");
+  }
+
+  function mailToast(m) {
+    const box = $("toasts");
+    while (box.children.length >= 3) box.firstChild.remove();
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = `<span class="mail-ic">${MAIL_ICON[m.event] || "✉"}</span><div><b>${m.status === "sent" ? "Emailed" : m.status === "failed" ? "Email failed:" : "Email queued for"} ${esc(recipients(m))}</b><br>${esc(m.subject)}</div>`;
+    box.appendChild(el);
+    setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 400); }, 5000);
+  }
+
   /* ---------- toasts ---------- */
   function toast(e) {
     const box = $("toasts");
@@ -445,6 +505,7 @@
 
   /* ---------- loop ---------- */
   function render(s) {
+    syncPeople(s.people_db);
     assignColors(s.projects);
     // If the hash names a project that doesn't exist (yet), show the portfolio.
     if (selected !== "ALL" && s.selected === "ALL") selected = "ALL";
@@ -459,11 +520,15 @@
     renderAgents(s);
     renderTeam(s);
     renderFeed(s);
+    renderMail(s);
     renderReport(s);
 
     const fresh = s.activity.filter((e) => !seenEvents.has(evKey(e)));
-    if (!firstEver) fresh.slice(0, 3).reverse().forEach(toast);
+    if (!firstEver) fresh.slice(0, 2).reverse().forEach(toast);
     fresh.forEach((e) => seenEvents.add(evKey(e)));
+    const freshMail = s.emails.filter((m) => !seenMail.has(mailKey(m)));
+    if (!firstEver) freshMail.slice(0, 2).reverse().forEach(mailToast);
+    freshMail.forEach((m) => seenMail.add(mailKey(m)));
     s.projects.forEach((p) => knownProjects.add(p.key));
     first = false;
     firstEver = false;

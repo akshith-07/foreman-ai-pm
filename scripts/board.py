@@ -15,6 +15,18 @@ Projects:
   board.py use ACME                       set the active project
   board.py portfolio                      all projects + cross-project workload
 
+People & teams:
+  board.py team [-p KEY]                  people, skills, availability, load (optionally one project's team)
+  board.py add-person --handle priya --name Priya --email priya@example.com --role "Frontend engineer" [--skills "..."] [--manager] --by <who>
+  board.py add-member -p KEY priya [ben ...] --by <who>
+  board.py remove-member -p KEY priya --by <who>    (refused while they own open tasks there)
+  board.py set-manager -p KEY maya --by <who>
+
+Email (automatic on approve, reassign, task done, project completed, member added):
+  board.py remind [-p KEY | INV-4] [--message "..."] --by <who>   email owners their open tasks
+  board.py emails [-p KEY]                recent notifications and whether they were sent
+  (emails go to outbox/ unless FOREMAN_SMTP_HOST is set; see scripts/notify.py)
+
 Tasks (-p KEY optional when the id says it, e.g. INV-4):
   board.py show [-p KEY]
   board.py add -p KEY --title "..." --epic Auth --priority high --due 2026-11-13 [--owner aisha] --by foreman-pm
@@ -46,18 +58,58 @@ import shutil
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import notify  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 PROJECTS = ROOT / "projects"
 SEED = ROOT / "seed" / "projects"
 ACTIVE = PROJECTS / ".active"
 REPORTS = ROOT / "reports"
+PEOPLE_FILE = ROOT / "people.json"
+SEED_PEOPLE = ROOT / "seed" / "people.json"
 
 STATUSES = ["proposed", "todo", "in_progress", "blocked", "done"]
 OPEN = {"todo", "in_progress", "blocked"}
 PRIORITIES = ["high", "medium", "low"]
-TEAM = ["aisha", "ben", "chen", "diego"]
+TEAM: list = []  # assignable people (non-managers), loaded from people.json
 OVERLOAD = 4  # open tasks across all projects before someone counts as overloaded
 KEY_RE = re.compile(r"^[A-Z][A-Z0-9]{1,5}$")
+HANDLE_RE = re.compile(r"^[a-z][a-z0-9_.-]{1,23}$")
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+# ---------- people ----------
+def people_db() -> dict:
+    if not PEOPLE_FILE.exists():
+        shutil.copy(SEED_PEOPLE, PEOPLE_FILE)
+    return json.loads(PEOPLE_FILE.read_text())["people"]
+
+
+def save_people(db: dict) -> None:
+    tmp = PEOPLE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps({"people": db}, indent=2) + "\n")
+    tmp.replace(PEOPLE_FILE)
+    refresh_team()
+
+
+def refresh_team() -> None:
+    TEAM[:] = [h for h, p in people_db().items() if not p.get("manager")]
+
+
+def managers() -> list:
+    return [h for h, p in people_db().items() if p.get("manager")]
+
+
+def email_of(handle: str | None) -> str | None:
+    return people_db().get(handle or "", {}).get("email")
+
+
+def name_of(handle: str | None) -> str:
+    return people_db().get(handle or "", {}).get("name", handle or "unassigned")
+
+
+refresh_team()
 
 
 # ---------- time helpers ----------
@@ -226,7 +278,9 @@ def health(board) -> dict:
     late = overdue(board)
     days_left = (dt.date.fromisoformat(board["release"]["due"]) - dt.date.today()).days
     reasons = []
-    if days_left < 0 and done < len(tasks):
+    if tasks and done == len(tasks):
+        verdict = "Completed"
+    elif days_left < 0 and done < len(tasks):
         verdict = "Off track"
         reasons.append("release date has passed with work still open")
     elif any(t["priority"] == "high" for t in late) or len(blocked) >= 3:
@@ -251,6 +305,7 @@ def summary(board) -> dict:
     return {
         "key": board["key"], "name": board["name"], "description": board.get("description", ""),
         "release": board["release"], "team": board.get("team", TEAM),
+        "manager": board.get("manager"), "completed": board.get("completed"),
         "created": board.get("created"), "health": health(board), "counts": counts,
     }
 
@@ -338,7 +393,7 @@ def portfolio_text(boards) -> str:
     for m, p in ppl.items():
         split = ", ".join(f"{k} {n}" for k, n in p["by"].items()) or "none"
         out.append(f"- @{m}: {p['total']} ({split})" + ("  ⚠ overloaded" if p["overloaded"] else ""))
-    risky = [b for b in boards if health(b)["verdict"] != "On track"]
+    risky = [b for b in boards if health(b)["verdict"] in ("At risk", "Off track")]
     out.append("\n**Needs attention:** " + (", ".join(f"{b['key']} ({health(b)['verdict']})" for b in risky) or "nothing, all projects on track"))
     return "\n".join(out)
 
@@ -383,6 +438,179 @@ def weekly_text(board) -> str:
     return "\n".join(out)
 
 
+# ---------- email notifications ----------
+def _mail(board, to_handles, subject, body, event, task=None, cc_handles=()):
+    to = [email_of(h) for h in to_handles]
+    cc = [email_of(h) for h in cc_handles]
+    r = notify.send(to, subject, body, event=event, project=board["key"], task=task, at=stamp(), cc=cc)
+    if r.get("status") != "skipped":
+        verb = {"sent": "Emailed", "queued": "Queued email to", "failed": "Email FAILED to"}[r["status"]]
+        print(f"✉ {verb} {', '.join(r['to'] + r.get('cc', []))}: {subject}"
+              + (f" ({r['error']})" if r.get("error") else ""))
+
+
+def notify_assigned(board, tasks, by):
+    by_owner = {}
+    for t in tasks:
+        by_owner.setdefault(t["owner"], []).append(t)
+    for owner, ts in by_owner.items():
+        lines = "\n".join(f"  • {t['id']}  {t['title']}  (priority {t['priority']}, due {t['due']})" for t in ts)
+        _mail(board, [owner],
+              f"[{board['key']}] You've been assigned {', '.join(t['id'] for t in ts)}",
+              f"Hi {name_of(owner)},\n\nYou're the owner of {'this task' if len(ts) == 1 else 'these tasks'} in "
+              f"{board['name']} ({board['release']['name']}, due {board['release']['due']}):\n\n{lines}\n\n"
+              f"Approved by {name_of(by)}. Post progress or blockers to @foreman-tracker in #project-room.",
+              "task_assigned", ts[0]["id"] if len(ts) == 1 else None)
+
+
+def notify_done(board, t, by):
+    mgr = board.get("manager")
+    h = health(board)
+    _mail(board, [mgr] if mgr else [t["owner"]],
+          f"[{board['key']}] {t['id']} completed: {t['title']}",
+          f"Hi {name_of(mgr)},\n\n{t['id']} \"{t['title']}\" was marked done by {name_of(by)} "
+          f"(owner: {name_of(t['owner'])}).\n\n{board['name']} is now {h['done']}/{h['total']} done · {h['verdict']} · "
+          f"{h['days_left']} days to {board['release']['name']}.",
+          "task_done", t["id"], cc_handles=[t["owner"]] if mgr and t["owner"] != mgr else ())
+
+
+def check_completion(board, by):
+    """Mark the project completed (and email everyone) when every approved task is done."""
+    h = health(board)
+    if h["verdict"] == "Completed" and not board.get("completed"):
+        board["completed"] = stamp()
+        board.setdefault("log", []).append({"at": stamp(), "by": by, "text": f"Project completed: {board['name']}, {board['release']['name']}."})
+        save(board)
+        print(f"🎉 Project {board['key']} is complete: all {h['total']} tasks done.")
+        lines = "\n".join(f"  • {t['id']}  {t['title']}  ({name_of(t['owner'])})" for t in board["tasks"] if t["status"] == "done")
+        mgr = board.get("manager")
+        _mail(board, [mgr] if mgr else board.get("team", []),
+              f"[{board['key']}] 🎉 Project completed: {board['name']} {board['release']['name']}",
+              f"Hi {name_of(mgr)} and team,\n\n{board['name']} {board['release']['name']} is complete: all {h['total']} "
+              f"approved tasks are done, {h['days_left']} days before the {board['release']['due']} due date.\n\n"
+              f"Delivered:\n{lines}\n\nThank you all!",
+              "project_completed", cc_handles=board.get("team", []))
+    elif h["verdict"] != "Completed" and board.get("completed"):
+        board["completed"] = None
+        board.setdefault("log", []).append({"at": stamp(), "by": by, "text": "Project reopened: work is open again."})
+        save(board)
+        print(f"Project {board['key']} reopened.")
+
+
+# ---------- people & team commands ----------
+def team_table(board=None) -> str:
+    db, ppl = people_db(), people(load_all())
+    handles = board.get("team", TEAM) if board else list(db)
+    head = f"## Team — {board['name']} ({board['key']}), manager @{board.get('manager') or '—'}\n" if board else "## People\n"
+    rows = ["| Handle | Name | Role | Skills | Availability | Open tasks (all projects) |",
+            "|---|---|---|---|---|---|"]
+    for h in handles:
+        p = db.get(h, {})
+        load = ppl.get(h, {"total": 0, "by": {}, "overloaded": False})
+        split = ", ".join(f"{k} {n}" for k, n in load["by"].items())
+        rows.append(f"| @{h} | {p.get('name', h)} | {p.get('role', '')}{' (manager)' if p.get('manager') else ''} | "
+                    f"{p.get('skills', '')} | {p.get('availability', '')} | {load['total']}"
+                    f"{' (' + split + ')' if split else ''}{' ⚠ overloaded' if load['overloaded'] else ''} |")
+    return head + "\n".join(rows)
+
+
+def cmd_team(a):
+    print(team_table(resolve(a) if a.project else None))
+
+
+def cmd_add_person(a):
+    db = people_db()
+    h = a.handle.lower()
+    if not HANDLE_RE.match(h):
+        sys.exit("Handle must be lowercase letters/digits (e.g. priya).")
+    if h in db:
+        sys.exit(f"@{h} already exists.")
+    if not EMAIL_RE.match(a.email):
+        sys.exit(f"{a.email!r} doesn't look like an email address.")
+    db[h] = {"name": a.name, "email": a.email, "role": a.role, "skills": a.skills,
+             "availability": a.availability, **({"manager": True} if a.manager else {})}
+    save_people(db)
+    print(f"Added @{h} ({a.name}, {a.role}, {a.email}){' as a manager' if a.manager else ''}. "
+          f"Add them to a project with: add-member KEY {h}")
+
+
+def cmd_add_member(a):
+    board = resolve(a)
+    db = people_db()
+    added = []
+    for h in [x.strip().lower() for x in a.handles]:
+        if h not in db or db[h].get("manager"):
+            sys.exit(f"@{h} isn't a known team member. Add them first with add-person.")
+        if h not in board.setdefault("team", []):
+            board["team"].append(h)
+            added.append(h)
+    if not added:
+        print(f"Nothing changed: already on the {board['key']} team.")
+        return
+    board.setdefault("log", []).append({"at": stamp(), "by": a.by, "text": f"Added to team: {', '.join('@' + h for h in added)}."})
+    save(board)
+    print(f"Added {', '.join('@' + h for h in added)} to {board['key']}. Team: {', '.join(board['team'])}")
+    for h in added:
+        _mail(board, [h], f"[{board['key']}] You've joined {board['name']}",
+              f"Hi {name_of(h)},\n\nYou've been added to {board['name']} ({board['release']['name']}, due "
+              f"{board['release']['due']}) by {name_of(a.by)}. Manager: {name_of(board.get('manager'))}.\n\n"
+              f"Tasks for you will be proposed in #project-room and confirmed by a human.", "member_added")
+
+
+def cmd_remove_member(a):
+    board = resolve(a)
+    h = a.handle.lower()
+    if h not in board.get("team", []):
+        sys.exit(f"@{h} isn't on the {board['key']} team.")
+    mine = [t["id"] for t in board["tasks"] if t["owner"] == h and t["status"] in OPEN | {"proposed"}]
+    if mine:
+        sys.exit(f"@{h} still owns {', '.join(mine)} in {board['key']}. Reassign them first.")
+    board["team"].remove(h)
+    board.setdefault("log", []).append({"at": stamp(), "by": a.by, "text": f"Removed from team: @{h}."})
+    save(board)
+    print(f"Removed @{h} from {board['key']}. Team: {', '.join(board['team'])}")
+
+
+def cmd_set_manager(a):
+    board = resolve(a)
+    h = a.handle.lower()
+    if h not in people_db():
+        sys.exit(f"@{h} isn't a known person. Add them first with add-person --manager.")
+    board["manager"] = h
+    board.setdefault("log", []).append({"at": stamp(), "by": a.by, "text": f"Manager set to @{h}."})
+    save(board)
+    print(f"{board['key']} manager is now @{h} ({email_of(h)})")
+
+
+def cmd_remind(a):
+    board = resolve(a, [a.id] if a.id else [])
+    tasks = [find(board, a.id)] if a.id else [t for t in board["tasks"] if t["status"] in OPEN]
+    by_owner = {}
+    for t in tasks:
+        if t["owner"]:
+            by_owner.setdefault(t["owner"], []).append(t)
+    if not by_owner:
+        print(f"No open tasks with owners in {board['key']}. Nothing to send.")
+        return
+    for owner, ts in by_owner.items():
+        lines = "\n".join(f"  • {t['id']}  {t['title']}  [{t['status'].replace('_', ' ')}]  due {t['due']}"
+                          + (f"\n    blocked: {t['blocker']}" if t.get("blocker") else "") for t in ts)
+        _mail(board, [owner], f"[{board['key']}] Reminder: {len(ts)} open task{'s' if len(ts) > 1 else ''}",
+              f"Hi {name_of(owner)},\n\nA quick reminder about your open work in {board['name']} "
+              f"({board['release']['name']} due {board['release']['due']}):\n\n{lines}\n\n"
+              f"{('Note: ' + a.message + chr(10) + chr(10)) if a.message else ''}"
+              f"Reply in #project-room to @foreman-tracker with progress or blockers.", "reminder")
+
+
+def cmd_emails(a):
+    rows = notify.recent(a.limit, a.project.upper() if a.project else None)
+    print(f"Mail mode: {notify.mode()} ({'sending via SMTP' if notify.mode() == 'smtp' else 'saved to outbox/, not sent'})")
+    for r in rows:
+        print(f"- {r['at']} [{r['status']}] {r['subject']} → {', '.join(r['to'])}")
+    if not rows:
+        print("- no emails yet")
+
+
 # ---------- project commands ----------
 def cmd_projects(_a):
     act = active_key()
@@ -404,16 +632,25 @@ def cmd_new_project(a):
     team = [m.strip().lower() for m in a.team.split(",")] if a.team else list(TEAM)
     bad = [m for m in team if m not in TEAM]
     if bad:
-        sys.exit(f"Unknown team members: {', '.join(bad)}. Known: {', '.join(TEAM)}.")
+        sys.exit(f"Unknown team members: {', '.join(bad)}. Known: {', '.join(TEAM)}. Add new people with add-person.")
+    mgr = (a.manager or (managers() or [None])[0])
+    if mgr and mgr not in people_db():
+        sys.exit(f"Unknown manager @{mgr}. Known managers: {', '.join(managers()) or 'none'}.")
     board = {
         "key": key, "name": a.name, "description": a.description or "",
-        "release": {"name": a.release, "due": a.due}, "team": team,
-        "created": stamp(), "next_id": 1, "tasks": [],
+        "release": {"name": a.release, "due": a.due}, "team": team, "manager": mgr,
+        "created": stamp(), "completed": None, "next_id": 1, "tasks": [],
         "log": [{"at": stamp(), "by": a.by, "text": f"Project created: {a.name}, {a.release} due {a.due}."}],
     }
     save(board)
     ACTIVE.write_text(key + "\n")
-    print(f"Created project {key}: {a.name} ({a.release} due {a.due}), team: {', '.join(team)}. Now active.")
+    print(f"Created project {key}: {a.name} ({a.release} due {a.due}), team: {', '.join(team)}, "
+          f"manager: @{mgr}. Now active.")
+    _mail(board, team, f"[{key}] New project: {a.name} {a.release}",
+          f"Hi team,\n\nA new project was set up in #project-room: {a.name}"
+          f"{' — ' + a.description if a.description else ''}.\n\nRelease {a.release}, due {a.due}. "
+          f"Manager: {name_of(mgr)}. Team: {', '.join(name_of(m) for m in team)}.",
+          "project_created", cc_handles=[mgr] if mgr else ())
 
 
 def cmd_use(a):
@@ -474,6 +711,8 @@ def cmd_approve(a):
         log(t, a.by, "Approved by human.")
     save(board)
     print("Approved: " + ", ".join(t["id"] for t in targets))
+    notify_assigned(board, targets, a.by)
+    check_completion(board, a.by)
 
 
 def cmd_cancel(a):
@@ -499,6 +738,8 @@ def cmd_assign(a):
     log(t, a.by, (f"Assigned to @{a.owner}." if not old else f"Reassigned @{old} -> @{a.owner}.") + why)
     save(board)
     print(f"{t['id']} now owned by @{a.owner}")
+    if t["status"] != "proposed":  # already-approved work changed hands: tell the new owner
+        notify_assigned(board, [t], a.by)
 
 
 def cmd_status(a):
@@ -506,12 +747,16 @@ def cmd_status(a):
     t = find(board, a.id)
     if t["status"] == "proposed":
         sys.exit(f"{t['id']} is still proposed. A human must approve it first.")
+    was = t["status"]
     t["status"] = a.status
     if a.status != "blocked":
         t["blocker"] = None
     log(t, a.by, f"Status -> {a.status}.")
     save(board)
     print(f"{t['id']} -> {a.status}")
+    if a.status == "done" and was != "done":
+        notify_done(board, t, a.by)
+    check_completion(board, a.by)
 
 
 def cmd_block(a):
@@ -523,6 +768,7 @@ def cmd_block(a):
     log(t, a.by, f"Blocked: {a.reason}")
     save(board)
     print(f"{t['id']} BLOCKED: {a.reason}")
+    check_completion(board, a.by)
 
 
 def cmd_unblock(a):
@@ -581,10 +827,13 @@ def cmd_validate(_a):
 
 def cmd_reset(_a):
     seed()
+    shutil.copy(SEED_PEOPLE, PEOPLE_FILE)
+    refresh_team()
+    notify.clear()
     if REPORTS.exists():
         for f in REPORTS.glob("*.md"):
             f.unlink()
-    print(f"Reset to demo seed: {', '.join(keys())} (reports cleared)")
+    print(f"Reset to demo seed: {', '.join(keys())} (people restored, reports and outbox cleared)")
 
 
 def main():
@@ -606,7 +855,29 @@ def main():
     s.add_argument("--release", required=True, help="e.g. v1.0")
     s.add_argument("--due", required=True, help="YYYY-MM-DD")
     s.add_argument("--team", default="", help="comma list, default everyone")
+    s.add_argument("--manager", default="", help="handle of the manager (default: first manager in people.json)")
     s.add_argument("--description", default="")
+
+    sp("team", by=False)
+    s = sp("add-person", project=False)
+    s.add_argument("--handle", required=True)
+    s.add_argument("--name", required=True)
+    s.add_argument("--email", required=True)
+    s.add_argument("--role", required=True)
+    s.add_argument("--skills", default="")
+    s.add_argument("--availability", default="Full time")
+    s.add_argument("--manager", action="store_true", help="register as a manager (gets completion emails)")
+    s = sp("add-member")
+    s.add_argument("handles", nargs="+")
+    s = sp("remove-member")
+    s.add_argument("handle")
+    s = sp("set-manager")
+    s.add_argument("handle")
+    s = sp("remind")
+    s.add_argument("id", nargs="?", help="one task id; default: every open task in the project")
+    s.add_argument("--message", default="", help="optional note added to the email")
+    s = sp("emails", by=False)
+    s.add_argument("--limit", type=int, default=15)
     s = sp("use", by=False, project=False)
     s.add_argument("key")
     sp("portfolio", by=False, project=False)
@@ -615,7 +886,7 @@ def main():
     s = sp("add")
     s.add_argument("--title", required=True)
     s.add_argument("--epic", required=True)
-    s.add_argument("--owner", choices=TEAM, default=None, help="leave out to let the assigner pick")
+    s.add_argument("--owner", default=None, help="leave out to let the assigner pick")
     s.add_argument("--priority", default="medium", choices=PRIORITIES)
     s.add_argument("--due", required=True, help="YYYY-MM-DD")
     s = sp("approve")
@@ -625,7 +896,7 @@ def main():
     s.add_argument("id")
     s = sp("assign")
     s.add_argument("id")
-    s.add_argument("owner", choices=TEAM)
+    s.add_argument("owner")
     s.add_argument("--reason", default="", help="why this person")
     s = sp("status")
     s.add_argument("id")

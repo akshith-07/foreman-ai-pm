@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import board as B  # noqa: E402
+import notify as N  # noqa: E402
 
 WEB = B.ROOT / "dashboard"
 STATIC = {  # explicit allow-list, so nothing else in the repo is served
@@ -29,14 +30,20 @@ STATIC = {  # explicit allow-list, so nothing else in the repo is served
 
 
 def state(selected: str) -> dict:
+    B.refresh_team()  # people can be added while the server runs
     boards = B.load_all()
     by_key = {b["key"]: b for b in boards}
     sel = selected.upper() if selected and selected.upper() in by_key else "ALL"
+    db = B.people_db()
     out = {
         "selected": sel,
         "projects": [B.summary(b) for b in boards],
         "people": B.people(boards),
-        "team": B.TEAM,
+        "people_db": {h: {"name": p.get("name", h), "role": p.get("role", ""), "manager": bool(p.get("manager"))}
+                      for h, p in db.items()},
+        "team": list(B.TEAM),
+        "emails": N.recent(12, None if sel == "ALL" else sel),
+        "mail_mode": N.mode(),
         "generated": B.stamp(),
     }
     if sel == "ALL":
