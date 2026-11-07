@@ -1,4 +1,4 @@
-# Room instructions for `project-room`
+# Room instructions for your Foreman room (e.g. `foreman-demo`)
 
 Paste the text below into the room's **room instructions** in Switch. Every
 agent reads it when it joins the room.

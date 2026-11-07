@@ -12,7 +12,7 @@ and assigning work, tracking blockers, balancing workload across projects
 and reporting. **A human approves every assignment.** A live dashboard shows
 the portfolio and each board changing as the team and agents talk.
 
-> Demo video: _<add link>_
+> Demo video: _<add link>_ · Build story: [BLOG.md](BLOG.md)
 
 ## The team
 
@@ -52,12 +52,25 @@ shared context and no humans involved. Switch provides:
 - **Humans in control.** Agents only act when @mentioned. "Who can talk to
   your agent" limits who can instruct them, and nothing is approved until a
   human says so.
-- **Room instructions.** Every agent that joins `project-room` reads
+- **Room instructions.** Every agent that joins the room reads
   [`switch/room-instructions.md`](switch/room-instructions.md).
 - **Your agent of choice.** The agents run on Codex here, but any provider
   Switch supports works, including Claude Code and OpenCode.
 
 The dashboard is **read-only**. Every change happens in the Switch room.
+
+## Switch setup at a glance
+
+| | What we used |
+|---|---|
+| **Switch server** | Local Switch server via **Switch Console**, using **Get started → On this computer** |
+| **Chat app** | The **Mattermost** bundled with Switch, connected under Home → Messaging apps |
+| **Agents connected** | 4 agents, all on **Codex** (`codex-cli`, signed in with ChatGPT) and run on this computer: `foreman-pm`, `foreman-assigner`, `foreman-tracker`, `foreman-reporter`. All 4 have their working directory set to this repo. |
+| **Agent instructions** | A two-line pointer per agent ("read `AGENTS.md` and `agents/<role>.md`"), so the behavior lives in the repo |
+| **Who can talk to each agent** | **Anyone**, so teammates whose chat accounts aren't linked to Switch can instruct them. Agents still only act when @mentioned. |
+| **Channel** | One Switch room (ours is `foreman-demo`) with all 4 agents, the humans, and the room instructions from `switch/room-instructions.md` |
+| **Humans in the room** | Akshith (engineering manager) and Felix (frontend engineer) on their own Mattermost accounts. Felix joins from his laptop over a private Tailscale link. Aisha, Chen and Diego are simulated teammates ("Aisha here: …"). |
+| **Handoffs** | PM → Assigner (owners), Tracker → PM (blockers), PM → Reporter (reports). All are @mentions in the same room. |
 
 ## Teams and email notifications
 
@@ -97,8 +110,8 @@ The dashboard is **read-only**. Every change happens in the Switch room.
 
 ```mermaid
 flowchart LR
-  subgraph Room["Switch room: #project-room (Mattermost)"]
-    H["Humans<br/>Aisha · Felix · Chen · Diego"]
+  subgraph Room["Switch room (Mattermost)"]
+    H["Humans<br/>Akshith (manager) · Felix · team"]
     PM["@foreman-pm"]
     AS["@foreman-assigner"]
     TR["@foreman-tracker"]
@@ -165,13 +178,30 @@ AI coding agent you're signed in to: Codex, Claude Code or OpenCode.
    - **Directory:** the full path to this repo.
    - **Provider:** your agent.
    - Keep **Bypass permissions** off.
-   - Keep **Who can talk to your agent** on **Me and my agents**, so the
-     agents can hand work to each other.
-4. **Create the room.** Create `project-room`
+   - Set **Who can talk to your agent** to **Anyone**, so teammates can
+     talk to the agents and the agents can hand work to each other. On
+     **Me and my agents**, a teammate's message gets "I only take
+     instructions from my owner."
+4. **Create the room.** Create a room, for example `foreman-demo`
    ([Create a room](https://docs.switchagents.ai/switch-rooms/getting-started/create-a-room.md)),
    invite all four agents, and paste [`switch/room-instructions.md`](switch/room-instructions.md)
-   into the room instructions.
-5. **Run the demo.** Follow [`demo/script.md`](demo/script.md).
+   into the room instructions. Then fully quit and reopen Switch Console, so
+   every agent starts a fresh session.
+5. **Bring in a teammate (optional).** The bundled Mattermost only listens on
+   this Mac. To share it privately, install [Tailscale](https://tailscale.com)
+   on both laptops, invite your teammate, then run:
+   ```bash
+   tailscale serve --bg <mattermost-port>    # shown in the Mattermost URL, e.g. 51477
+   ```
+   Your teammate opens the printed `https://<your-mac>.<tailnet>.ts.net`
+   address, creates an account, and joins the room. Use `serve`, never
+   `funnel`, which would make it public. Stop sharing with `tailscale serve reset`.
+6. **Real emails (optional).** Start Mailpit and `cp .env.example .env`, as
+   described under [Teams and email notifications](#teams-and-email-notifications).
+   Keep `scripts/dashboard.py` running, because its mail relay sends the
+   emails the sandboxed agents queue.
+7. **Run the demo.** Follow [`demo/script.md`](demo/script.md), or the full
+   checklist in [`demo/test-plan.md`](demo/test-plan.md).
 
 ### Troubleshooting
 
@@ -182,6 +212,14 @@ AI coding agent you're signed in to: Codex, Claude Code or OpenCode.
   until you do.
 - **An agent replies but runs nothing.** Check that the agent's Directory is
   this repo. It can't be changed after the agent is created.
+- **An agent refuses a teammate** ("I only take instructions from my owner").
+  Set its **Who can talk to your agent** to **Anyone**.
+- **Emails show "failed: Operation not permitted."** The agent sandbox has no
+  network access, which is intended. Make sure `scripts/dashboard.py` is
+  running with a `.env`; its mail relay delivers queued emails within 3
+  seconds.
+- **Agents still act on old rules.** They're on an old session. Fully quit and
+  reopen Switch Console.
 
 ## Board CLI
 

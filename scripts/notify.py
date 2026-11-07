@@ -58,7 +58,7 @@ def send(to: list, subject: str, body: str, *, event: str, project: str, task: s
     msg["Date"] = formatdate(localtime=True)
     msg["Message-ID"] = make_msgid(domain="foreman.local")
     msg["X-Foreman-Event"] = event
-    msg.set_content(body + "\n\n— Foreman, your AI project manager (sent from #project-room via Switch)\n")
+    msg.set_content(body + "\n\n— Foreman, your AI project manager (sent from your Switch room via Switch)\n")
 
     OUTBOX.mkdir(exist_ok=True)
     n = sum(1 for _ in OUTBOX.glob("*.eml")) + 1

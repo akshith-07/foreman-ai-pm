@@ -460,7 +460,7 @@ def notify_assigned(board, tasks, by):
               f"[{board['key']}] You've been assigned {', '.join(t['id'] for t in ts)}",
               f"Hi {name_of(owner)},\n\nYou're the owner of {'this task' if len(ts) == 1 else 'these tasks'} in "
               f"{board['name']} ({board['release']['name']}, due {board['release']['due']}):\n\n{lines}\n\n"
-              f"Approved by {name_of(by)}. Post progress or blockers to @foreman-tracker in #project-room.",
+              f"Approved by {name_of(by)}. Post progress or blockers to @foreman-tracker in your Switch room.",
               "task_assigned", ts[0]["id"] if len(ts) == 1 else None)
 
 
@@ -555,7 +555,7 @@ def cmd_add_member(a):
         _mail(board, [h], f"[{board['key']}] You've joined {board['name']}",
               f"Hi {name_of(h)},\n\nYou've been added to {board['name']} ({board['release']['name']}, due "
               f"{board['release']['due']}) by {name_of(a.by)}. Manager: {name_of(board.get('manager'))}.\n\n"
-              f"Tasks for you will be proposed in #project-room and confirmed by a human.", "member_added")
+              f"Tasks for you will be proposed in your Switch room and confirmed by a human.", "member_added")
 
 
 def cmd_remove_member(a):
@@ -600,7 +600,7 @@ def cmd_remind(a):
               f"Hi {name_of(owner)},\n\nA quick reminder about your open work in {board['name']} "
               f"({board['release']['name']} due {board['release']['due']}):\n\n{lines}\n\n"
               f"{('Note: ' + a.message + chr(10) + chr(10)) if a.message else ''}"
-              f"Reply in #project-room to @foreman-tracker with progress or blockers.", "reminder")
+              f"Reply in your Switch room to @foreman-tracker with progress or blockers.", "reminder")
 
 
 def cmd_deliver(_a):
@@ -653,7 +653,7 @@ def cmd_new_project(a):
     print(f"Created project {key}: {a.name} ({a.release} due {a.due}), team: {', '.join(team)}, "
           f"manager: @{mgr}. Now active.")
     _mail(board, team, f"[{key}] New project: {a.name} {a.release}",
-          f"Hi team,\n\nA new project was set up in #project-room: {a.name}"
+          f"Hi team,\n\nA new project was set up in your Switch room: {a.name}"
           f"{' — ' + a.description if a.description else ''}.\n\nRelease {a.release}, due {a.due}. "
           f"Manager: {name_of(mgr)}. Team: {', '.join(name_of(m) for m in team)}.",
           "project_created", cc_handles=[mgr] if mgr else ())
