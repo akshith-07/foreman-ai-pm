@@ -1,0 +1,17 @@
+# Secrets and local auth — never commit
+.env
+.env.*
+*.key
+*.pem
+.codex/
+.claude/
+auth.json
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
