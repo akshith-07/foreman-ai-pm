@@ -402,7 +402,7 @@
   function renderFeed(s) {
     $("act-count").textContent = s.activity.length ? `${s.activity.length} recent` : "";
     if (!s.activity.length) {
-      $("feed").innerHTML = `<li class="empty">No activity yet. Talk to the agents in #project-room.</li>`;
+      $("feed").innerHTML = `<li class="empty">No activity yet. Talk to the agents in your Switch room.</li>`;
       return;
     }
     $("feed").innerHTML = s.activity.map((e) => {
