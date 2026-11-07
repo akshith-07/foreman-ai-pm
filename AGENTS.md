@@ -13,6 +13,20 @@ is in your Switch agent instructions. These rules apply to all roles.
 - The room conversation — what people said. If the board and the conversation
   disagree, trust the newest human message and update the board to match.
 
+## How to work
+- For anything about tasks, status or the board, your **first step** is to
+  run the relevant `python3 scripts/board.py` command in your shell, from
+  your working folder. Don't look up room history first unless the message
+  refers to something said earlier.
+- If a tool call fails, retry it once before reporting a problem.
+- **No duplicate tasks.** Before you `add` anything, run `show` and check
+  whether an existing task already covers the work (same goal, even if it's
+  worded differently). If one does, reuse it: reference its id, and if it
+  unblocks something, say so and @mention its owner to start it. Don't
+  create a new task.
+- If a human says a proposed task is a duplicate or not needed, run
+  `cancel <id> --by <their handle>`.
+
 ## Hard rules
 1. Only touch `tasks.json`, and only through `scripts/board.py`. Don't create,
    edit or delete any other file. Don't run git, network or install commands.

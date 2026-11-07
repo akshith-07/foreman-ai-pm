@@ -8,6 +8,7 @@ Usage (run from the repo root):
   python3 scripts/board.py show
   python3 scripts/board.py add --title "..." --epic Auth --owner aisha --priority high --due 2026-11-13 --by foreman-pm
   python3 scripts/board.py approve T-4 T-5 --by <human>      (or: approve --all-proposed)
+  python3 scripts/board.py cancel T-8 --by <human>             (proposed tasks only)
   python3 scripts/board.py assign T-4 ben --by foreman-pm
   python3 scripts/board.py status T-4 in_progress|done|todo --by <who>
   python3 scripts/board.py block T-4 "callback URL not configured" --by foreman-tracker
@@ -127,6 +128,15 @@ def cmd_approve(board, a):
     print("Approved: " + ", ".join(t["id"] for t in targets))
 
 
+def cmd_cancel(board, a):
+    t = find(board, a.id)
+    if t["status"] != "proposed":
+        sys.exit(f"{t['id']} is {t['status']}. Only proposed tasks can be cancelled.")
+    board["tasks"].remove(t)
+    save(board)
+    print(f"Cancelled proposed task {t['id']} ({t['title']}) by {a.by}")
+
+
 def cmd_assign(board, a):
     t = find(board, a.id)
     old, t["owner"] = t["owner"], a.owner
@@ -234,6 +244,8 @@ def main():
     s = by(sub.add_parser("approve"))
     s.add_argument("ids", nargs="*")
     s.add_argument("--all-proposed", action="store_true")
+    s = by(sub.add_parser("cancel"))
+    s.add_argument("id")
     s = by(sub.add_parser("assign"))
     s.add_argument("id")
     s.add_argument("owner", choices=TEAM)
