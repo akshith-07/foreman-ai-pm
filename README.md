@@ -200,8 +200,8 @@ AI coding agent you're signed in to: Codex, Claude Code or OpenCode.
    described under [Teams and email notifications](#teams-and-email-notifications).
    Keep `scripts/dashboard.py` running, because its mail relay sends the
    emails the sandboxed agents queue.
-7. **Run the demo.** Follow [`demo/script.md`](demo/script.md), or the full
-   checklist in [`demo/test-plan.md`](demo/test-plan.md).
+7. **Run the demo.** Follow the flow in the
+   [demo video](https://youtu.be/oSAtZTSXuw8).
 
 ### Troubleshooting
 
@@ -266,7 +266,6 @@ reports/                    saved standups, weekly and portfolio reports
 scripts/board.py            board CLI the agents use
 scripts/dashboard.py        dashboard server (serves dashboard/ + /api/state)
 dashboard/                  index.html, styles.css, app.js (live read-only UI)
-demo/script.md              demo walkthrough
 ```
 
 ## Safety choices
